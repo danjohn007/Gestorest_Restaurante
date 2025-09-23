@@ -12,11 +12,13 @@
         
         body {
             font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.2;
+            font-size: 13px;
+            line-height: 1.3;
             max-width: 300px;
             margin: 0 auto;
             padding: 10px;
+            color: #222;
+            font-weight: 600;
         }
         
         .header {
@@ -51,6 +53,11 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 3px;
+        }
+        
+        .item-name, .company-name, .header, .ticket-info, .totals, .footer {
+            font-weight: bold;
+            color: #111;
         }
         
         .item-name {
@@ -151,6 +158,32 @@
         <div>Cajero: <?= htmlspecialchars($ticket['cashier_name']) ?></div>
         <div>Fecha: <?= date('d/m/Y H:i:s', strtotime($ticket['created_at'])) ?></div>
         <div>Pago: <?= getPaymentMethodText($ticket['payment_method']) ?></div>
+        <?php
+        // Calcular totales reales sumando todos los productos
+        $total = 0;
+        $subtotal = 0;
+        $tax = 0;
+        if (!empty($ticket['order_ids'])) {
+            foreach ($ticket['order_ids'] as $orderId) {
+                if (!empty($ticket['orders_items'][$orderId])) {
+                    foreach ($ticket['orders_items'][$orderId] as $item) {
+                        $total += floatval($item['subtotal']);
+                    }
+                }
+            }
+            $subtotal = round($total / 1.16, 2);
+            $tax = round($total - $subtotal, 2);
+        } else if (!empty($ticket['items'])) {
+            foreach ($ticket['items'] as $item) {
+                $total += floatval($item['subtotal']);
+            }
+            $subtotal = round($total / 1.16, 2);
+            $tax = round($total - $subtotal, 2);
+        }
+        ?>
+        <div><strong>Subtotal: $<?= number_format($subtotal, 2) ?></strong></div>
+        <div><strong>IVA (16%): $<?= number_format($tax, 2) ?></strong></div>
+        <div><strong>Total: $<?= number_format($total, 2) ?></strong></div>
     </div>
     
     <?php if (!empty($ticket['order_notes'])): ?>
@@ -167,9 +200,15 @@
             <div class="item-price">PRECIO</div>
             <div class="item-total">TOTAL</div>
         </div>
-        
-        <?php if (!empty($ticket['items'])): ?>
-            <?php foreach ($ticket['items'] as $item): ?>
+        <?php
+        // Mostrar todos los productos de todos los pedidos incluidos en el ticket
+        $total_detalles = 0;
+        if (!empty($ticket['order_ids'])) {
+            foreach ($ticket['order_ids'] as $orderId) {
+                if (!empty($ticket['orders_items'][$orderId])) {
+                    foreach ($ticket['orders_items'][$orderId] as $item) {
+                        $total_detalles += floatval($item['subtotal']);
+        ?>
             <div class="item-row">
                 <div class="item-name"><?= htmlspecialchars($item['dish_name']) ?></div>
                 <div class="item-qty"><?= $item['quantity'] ?></div>
@@ -179,22 +218,45 @@
             <?php if (!empty($item['notes'])): ?>
             <div class="item-notes">* <?= htmlspecialchars($item['notes']) ?></div>
             <?php endif; ?>
-            <?php endforeach; ?>
-        <?php endif; ?>
+        <?php
+                    }
+                }
+            }
+        } else if (!empty($ticket['items'])) {
+            foreach ($ticket['items'] as $item) {
+                $total_detalles += floatval($item['subtotal']);
+        ?>
+            <div class="item-row">
+                <div class="item-name"><?= htmlspecialchars($item['dish_name']) ?></div>
+                <div class="item-qty"><?= $item['quantity'] ?></div>
+                <div class="item-price">$<?= number_format($item['unit_price'], 2) ?></div>
+                <div class="item-total">$<?= number_format($item['subtotal'], 2) ?></div>
+            </div>
+            <?php if (!empty($item['notes'])): ?>
+            <div class="item-notes">* <?= htmlspecialchars($item['notes']) ?></div>
+            <?php endif; ?>
+        <?php
+            }
+        }
+        ?>
+        <div class="item-row final-total" style="border-top:2px solid #000; margin-top:10px;">
+            <div class="item-name">TOTAL DETALLES</div>
+            <div class="item-total" style="font-size:14px;">$<?= number_format($total_detalles, 2) ?></div>
+        </div>
     </div>
     
     <div class="totals">
         <div class="total-row">
             <div>Subtotal:</div>
-            <div>$<?= number_format($ticket['subtotal'], 2) ?></div>
+            <div>$<?= number_format($subtotal, 2) ?></div>
         </div>
         <div class="total-row">
             <div>IVA (16%):</div>
-            <div>$<?= number_format($ticket['tax'], 2) ?></div>
+            <div>$<?= number_format($tax, 2) ?></div>
         </div>
         <div class="total-row final-total">
             <div>TOTAL:</div>
-            <div>$<?= number_format($ticket['total'], 2) ?></div>
+            <div>$<?= number_format($total, 2) ?></div>
         </div>
     </div>
     
@@ -225,4 +287,6 @@ function getPaymentMethodText($method) {
     
     return $methods[$method] ?? strtoupper($method);
 }
+
+// Eliminar los volcados de depuración
 ?>

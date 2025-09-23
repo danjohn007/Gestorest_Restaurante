@@ -1,5 +1,20 @@
 <?php
 class Ticket extends BaseModel {
+    /**
+     * Actualiza todos los tickets con el mismo ticket_number (para multiticket)
+     */
+    public function updateByTicketNumber($ticketNumber, $data) {
+        $fields = array_keys($data);
+        $setClauses = [];
+        foreach ($fields as $field) {
+            $setClauses[] = "{$field} = ?";
+        }
+        $query = "UPDATE {$this->table} SET " . implode(',', $setClauses) . " WHERE ticket_number = ?";
+        $params = array_values($data);
+        $params[] = $ticketNumber;
+        $stmt = $this->db->prepare($query);
+        return $stmt->execute($params);
+    }
     protected $table = 'tickets';
     
     public function generateTicketNumber() {
@@ -71,7 +86,7 @@ class Ticket extends BaseModel {
             $totalWithTax = floatval($order['total']);
             $subtotal = round($totalWithTax / 1.16, 2); // Remove 16% IVA to get subtotal
             $tax = round($totalWithTax - $subtotal, 2); // Calculate the IVA amount
-            $total = $totalWithTax; // Total remains the same
+            $total = $totalWithTax; // Total remains the same (NO incluye propina)
             
             // Validate data before insertion
             if ($subtotal <= 0) {
@@ -89,8 +104,9 @@ class Ticket extends BaseModel {
                 'cashier_id' => intval($cashierId),
                 'subtotal' => $subtotal,
                 'tax' => $tax,
-                'total' => $total,
+                'total' => $total, // NO incluye propina
                 'payment_method' => $paymentMethod
+                // tip_amount y tip_percentage se agregan por separado
             ];
             
             // Log ticket creation attempt for debugging
@@ -187,6 +203,24 @@ class Ticket extends BaseModel {
             throw $e;
         }
     }
+
+    public function getTipsByDate($dateFrom, $dateTo) {
+        $query = "SELECT 
+                    t.ticket_number,
+                    MAX(t.tip_amount) as tip_amount,
+                    MAX(t.tip_percentage) as tip_percentage,
+                    MAX(t.tip_date) as tip_date,
+                    MAX(u.name) as cashier_name
+                FROM {$this->table} t
+                JOIN users u ON t.cashier_id = u.id
+                WHERE t.tip_amount IS NOT NULL AND t.tip_amount > 0
+                    AND t.tip_date BETWEEN ? AND ?
+                GROUP BY t.ticket_number
+                ORDER BY MAX(t.tip_date) DESC, t.ticket_number DESC";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$dateFrom, $dateTo]);
+        return $stmt->fetchAll();
+        }
     
     /**
      * Clean up any orphaned transactions from previous errors
@@ -354,44 +388,31 @@ class Ticket extends BaseModel {
                 throw new Exception('Método de pago inválido');
             }
             
-            // Create ticket for the first order (as main order)
-            $mainOrder = $orders[0];
-            $ticketData = [
-                'order_id' => intval($mainOrder['id']),
-                'ticket_number' => $this->generateTicketNumber(),
-                'cashier_id' => intval($cashierId),
-                'subtotal' => $subtotal,
-                'tax' => $tax,
-                'total' => $total,
-                'payment_method' => $paymentMethod
-            ];
-            
-            // Log ticket creation attempt for debugging
-            error_log("Multiple orders ticket creation attempt: " . json_encode($ticketData));
-            
-            // Validate required fields before database insertion
-            if (empty($ticketData['ticket_number'])) {
-                throw new Exception('No se pudo generar el número de ticket');
-            }
-            
-            if ($ticketData['cashier_id'] <= 0) {
-                throw new Exception('ID de cajero inválido');
-            }
-            
-            if ($ticketData['order_id'] <= 0) {
-                throw new Exception('ID de pedido principal inválido');
-            }
 
-            // Additional validation: Check if database schema supports the data we're trying to insert
-            $this->validateTicketDataForSchema($ticketData);
-            
-            $ticketId = $this->create($ticketData);
-            
-            if (!$ticketId || $ticketId === false || $ticketId <= 0) {
-                // Get the last database error for debugging
-                $errorInfo = $this->db->getConnection()->errorInfo();
-                $errorMessage = $this->getDatabaseErrorMessage($ticketId);
-                throw new Exception("Error al crear el ticket en la base de datos: " . $errorMessage);
+            // Crear un ticket_number único para todos los pedidos
+            $ticket_number = $this->generateTicketNumber();
+
+            // Crear un ticket para cada pedido con el mismo ticket_number
+            $ticketIds = [];
+            foreach ($orders as $order) {
+                $ticketData = [
+                    'order_id' => intval($order['id']),
+                    'ticket_number' => $ticket_number,
+                    'cashier_id' => intval($cashierId),
+                    'subtotal' => round($order['total'] / 1.16, 2),
+                    'tax' => round($order['total'] - ($order['total'] / 1.16), 2),
+                    'total' => $order['total'],
+                    'payment_method' => $paymentMethod
+                ];
+                // Validar datos antes de insertar
+                $this->validateTicketDataForSchema($ticketData);
+                $ticketId = $this->create($ticketData);
+                if (!$ticketId || $ticketId === false || $ticketId <= 0) {
+                    $errorInfo = $this->db->getConnection()->errorInfo();
+                    $errorMessage = $this->getDatabaseErrorMessage($ticketId);
+                    throw new Exception("Error al crear el ticket en la base de datos: " . $errorMessage);
+                }
+                $ticketIds[] = $ticketId;
             }
             
             // Update all order statuses to delivered and customer stats
@@ -625,6 +646,7 @@ class Ticket extends BaseModel {
     }
     
     public function getTicketWithDetails($ticketId) {
+        // 1. Obtener el ticket principal
         $query = "SELECT t.*, o.table_id, o.waiter_id, o.notes as order_notes,
                          tb.number as table_number,
                          w.employee_code,
@@ -637,60 +659,82 @@ class Ticket extends BaseModel {
                   JOIN users u_waiter ON w.user_id = u_waiter.id
                   JOIN users u_cashier ON t.cashier_id = u_cashier.id
                   WHERE t.id = ?";
-        
+
         $stmt = $this->db->prepare($query);
         $stmt->execute([$ticketId]);
-        
         $ticket = $stmt->fetch();
-        
-        if ($ticket) {
-            // Get all orders for this table that were delivered at the same time as this ticket
-            $orderModel = new Order();
-            
-            // Get order items from the specific order linked to this ticket
-            // For tickets created from multiple orders, this will show the main order's items
-            // Note: This is a simplified approach that shows items from the primary order only
-            $itemsQuery = "SELECT oi.*, d.name as dish_name, d.category, o.id as order_id
-                          FROM order_items oi
-                          JOIN dishes d ON oi.dish_id = d.id
-                          JOIN orders o ON oi.order_id = o.id
-                          WHERE o.id = ?
-                          ORDER BY oi.created_at ASC";
-            
-            $stmt = $this->db->prepare($itemsQuery);
-            $stmt->execute([$ticket['order_id']]);
-            
-            $ticket['items'] = $stmt->fetchAll();
-            
-            // Also get order details for reference
-            $ticket['order_details'] = $orderModel->getOrderItems($ticket['order_id']);
+
+        if (!$ticket) {
+            return null;
         }
-        
-        return $ticket;
+
+        // 2. Buscar el ticket_number
+        $ticket_number = $ticket['ticket_number'];
+
+        // 3. Obtener todos los pedidos asociados a ese ticket_number
+        $stmt_orders = $this->db->prepare("SELECT o.* FROM orders o JOIN tickets t ON t.order_id = o.id WHERE t.ticket_number = ?");
+        $stmt_orders->execute([$ticket_number]);
+        $orders = $stmt_orders->fetchAll(PDO::FETCH_ASSOC);
+
+        // 4. Obtener todos los productos de todos los pedidos agrupados por order_id
+        $orders_items = [];
+        $all_items = [];
+        foreach ($orders as $order) {
+            $stmt_items = $this->db->prepare("SELECT oi.*, d.name as dish_name, d.category, o.id as order_id FROM order_items oi JOIN dishes d ON oi.dish_id = d.id JOIN orders o ON oi.order_id = o.id WHERE o.id = ? ORDER BY oi.created_at ASC");
+            $stmt_items->execute([$order['id']]);
+            $items = $stmt_items->fetchAll(PDO::FETCH_ASSOC);
+            $orders_items[$order['id']] = $items;
+            foreach ($items as $item) {
+                $all_items[] = $item;
+            }
+        }
+
+        // 5. Marcar todos los pedidos como entregados si no lo están
+        foreach ($orders as $order) {
+            if ($order['status'] !== 'entregado') {
+                $stmt_update = $this->db->prepare("UPDATE orders SET status = 'entregado' WHERE id = ?");
+                $stmt_update->execute([$order['id']]);
+            }
+        }
+
+    // 6. Retornar los datos agregados
+    $ticket['orders'] = $orders;
+    $ticket['orders_items'] = $orders_items;
+    $ticket['items'] = $all_items; // respaldo para la vista
+    $ticket['order_ids'] = array_column($orders, 'id');
+    return $ticket;
     }
     
     public function getTicketsByDate($date = null, $cashierId = null, $filters = []) {
         $date = $date ?: date('Y-m-d');
-        
-        $query = "SELECT t.*, o.table_id, tb.number as table_number,
-                         u.name as cashier_name,
-                         c.name as customer_name, c.phone as customer_phone, c.email as customer_email,
-                         o.customer_name as order_customer_name
-                  FROM {$this->table} t
-                  JOIN orders o ON t.order_id = o.id
-                  LEFT JOIN tables tb ON o.table_id = tb.id
-                  JOIN users u ON t.cashier_id = u.id
-                  LEFT JOIN customers c ON o.customer_id = c.id
-                  WHERE DATE(t.created_at) = ?";
-        
+        $query = "SELECT 
+                    t.ticket_number,
+                    MIN(t.id) as id,
+                    MAX(tb.number) as table_number,
+                    MAX(u.name) as cashier_name,
+                    GROUP_CONCAT(DISTINCT c.name SEPARATOR ', ') as customer_name,
+                    GROUP_CONCAT(DISTINCT c.phone SEPARATOR ', ') as customer_phone,
+                    GROUP_CONCAT(DISTINCT c.email SEPARATOR ', ') as customer_email,
+                    GROUP_CONCAT(DISTINCT o.customer_name SEPARATOR ', ') as order_customer_name,
+                    SUM(t.subtotal) as subtotal,
+                    SUM(t.tax) as tax,
+                    SUM(t.total) as total,
+                    SUM(t.tip_amount) as tip_amount, -- Mostrar suma de propinas
+                    MAX(t.tip_percentage) as tip_percentage, -- Mostrar porcentaje si existe
+                    MAX(t.payment_method) as payment_method,
+                    MAX(t.created_at) as created_at,
+                    MAX(t.status) as status
+                FROM {$this->table} t
+                JOIN orders o ON t.order_id = o.id
+                LEFT JOIN tables tb ON o.table_id = tb.id
+                JOIN users u ON t.cashier_id = u.id
+                LEFT JOIN customers c ON o.customer_id = c.id
+                WHERE DATE(t.created_at) = ?";
         $params = [$date];
-        
         if ($cashierId) {
             $query .= " AND t.cashier_id = ?";
             $params[] = $cashierId;
         }
-        
-        // Add search functionality
         if (isset($filters['search']) && !empty($filters['search'])) {
             $searchTerm = '%' . $filters['search'] . '%';
             $query .= " AND (o.customer_name LIKE ? OR c.name LIKE ? OR c.phone LIKE ? OR c.email LIKE ? OR tb.number LIKE ?)";
@@ -700,12 +744,9 @@ class Ticket extends BaseModel {
             $params[] = $searchTerm;
             $params[] = $searchTerm;
         }
-        
-        $query .= " ORDER BY t.created_at DESC";
-        
+        $query .= " GROUP BY t.ticket_number ORDER BY MAX(t.created_at) DESC";
         $stmt = $this->db->prepare($query);
         $stmt->execute($params);
-        
         return $stmt->fetchAll();
     }
     
@@ -1431,6 +1472,15 @@ class Ticket extends BaseModel {
             error_log("Schema validation failed: " . $e->getMessage());
             throw new Exception('Error al validar el esquema de la base de datos: ' . $e->getMessage());
         }
+    }
+
+     /**
+     * Agrega una propina manual (no asociada a ticket)
+     */
+    public function addManualTip($tipAmount, $userId) {
+        $query = "INSERT INTO tickets (tip_amount, tip_date, tip_added_by, payment_method, subtotal, tax, total, created_at) VALUES (?, ?, ?, 'propina_manual', 0, 0, 0, NOW())";
+        $stmt = $this->db->prepare($query);
+        return $stmt->execute([$tipAmount, date('Y-m-d'), $userId]);
     }
 }
 ?>

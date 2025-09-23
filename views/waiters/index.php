@@ -101,11 +101,11 @@
                                        class="btn btn-outline-info" title="Asignar Mesas">
                                         <i class="bi bi-grid-3x3-gap"></i>
                                     </a>
-                                    <button type="button" class="btn btn-outline-danger" 
-                                            title="Eliminar" 
-                                            onclick="confirmDelete(<?= $waiter['id'] ?>, '<?= htmlspecialchars($waiter['name'], ENT_QUOTES) ?>')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <form method="POST" action="<?= BASE_URL ?>/waiters/delete/<?= $waiter['id'] ?>" style="display: inline;" onsubmit="return confirm('¿Eliminar mesero <?= htmlspecialchars($waiter['name'], ENT_QUOTES) ?>? Esta acción desactivará también al usuario asociado.')">
+                                        <button type="submit" class="btn btn-outline-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -157,36 +157,3 @@
     </div>
 </div>
 
-<!-- Modal de confirmación para eliminar -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar al mesero <strong id="waiterName"></strong>?</p>
-                <p class="text-muted small">Esta acción desactivará también al usuario asociado y no se puede deshacer.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function confirmDelete(waiterId, waiterName) {
-    document.getElementById('waiterName').textContent = waiterName;
-    document.getElementById('deleteForm').action = '<?= BASE_URL ?>/waiters/delete/' + waiterId;
-    
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    deleteModal.show();
-}
-</script>

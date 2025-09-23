@@ -133,6 +133,17 @@
                     <div class="card bg-light">
                         <div class="card-body">
                             <h6 class="card-title">Total del Pedido</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="card-title mb-0">Total del Pedido</h6>
+                                <div class="d-flex gap-2">
+                                    <a href="<?= BASE_URL ?>/orders" class="btn btn-secondary btn-sm" id="cancelOrderBtn">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary btn-sm" id="confirmOrderBtn">
+                                        <i class="bi bi-check-circle"></i> Confirmar
+                                    </button>
+                                </div>
+                            </div>
                             <h3 class="text-primary mb-0" id="orderTotal">$0.00</h3>
                         </div>
                     </div>
@@ -147,6 +158,25 @@
                     <h5 class="card-title mb-0">
                         <i class="bi bi-cup-hot"></i> Seleccionar Platillos
                     </h5>
+                    <br>
+                    <!-- Category Filter Buttons (dentro de la tarjeta) -->
+                    <div class="mb-3" id="categoryFilterContainer">
+                        <div class="d-flex flex-wrap gap-2" style="margin-bottom: 0.5rem;">
+                            <button type="button" class="btn btn-outline-primary btn-category active" data-category="all">Todas</button>
+                            <?php 
+                            $categories = array();
+                            foreach ($dishes as $dish) {
+                                if (!in_array($dish['category'], $categories)) {
+                                    $categories[] = $dish['category'];
+                                }
+                            }
+                            foreach ($categories as $cat): ?>
+                                <button type="button" class="btn btn-outline-primary btn-category" data-category="<?= strtolower(htmlspecialchars($cat)) ?>" style="margin-bottom: 4px;">
+                                    <?= htmlspecialchars($cat) ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <?php if (isset($errors['items'])): ?>
@@ -283,6 +313,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const newCustomerForm = document.getElementById('new_customer_form');
     
     // Dish search functionality
+    // Categoría de platillos
+    const categoryButtons = document.querySelectorAll('.btn-category');
+
+    categoryButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            categoryButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterByCategory(btn.dataset.category);
+        });
+    });
+
+    function filterByCategory(category) {
+        const allDishes = document.querySelectorAll('.dish-item');
+        const allCategoryContainers = document.querySelectorAll('.category-dishes');
+        const allCategoryHeaders = document.querySelectorAll('.category-header');
+        if (category === 'all') {
+            allDishes.forEach(d => d.style.display = 'block');
+            allCategoryContainers.forEach(c => c.style.display = 'flex');
+            allCategoryHeaders.forEach(h => h.style.display = 'block');
+            return;
+        }
+        allDishes.forEach(dish => {
+            if (dish.dataset.dishCategory === category) {
+                dish.style.display = 'block';
+            } else {
+                dish.style.display = 'none';
+            }
+        });
+        allCategoryContainers.forEach(container => {
+            if (container.dataset.category.toLowerCase() === category) {
+                container.style.display = 'flex';
+            } else {
+                container.style.display = 'none';
+            }
+        });
+        allCategoryHeaders.forEach(header => {
+            if (header.dataset.category.toLowerCase() === category) {
+                header.style.display = 'block';
+            } else {
+                header.style.display = 'none';
+            }
+        });
+    }
     const dishSearch = document.getElementById('dish_search');
     const clearDishSearchBtn = document.getElementById('clear_dish_search');
     const dishesContainer = document.getElementById('dishes_container');
@@ -540,6 +613,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         totalElement.textContent = '$' + total.toFixed(2);
     }
+    // Inicializar lista al cargar
+    updateAddedDishesList();
 });
 </script>
 
@@ -560,5 +635,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .btn-minus, .btn-plus {
     width: 35px;
+}
+
+.btn-category {
+    min-width: 110px;
+    white-space: normal;
+    word-break: break-word;
 }
 </style>

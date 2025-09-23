@@ -15,6 +15,9 @@
         <a href="<?= BASE_URL ?>/financial/collections" class="btn btn-outline-danger">
             <i class="bi bi-cash-coin"></i> Cobranza
         </a>
+        <a href="<?= BASE_URL ?>/tickets/dashboardTips" class="btn btn-outline-info">
+            <i class="bi bi-cash-coin"></i> Propinas
+        </a>
     </div>
 </div>
 

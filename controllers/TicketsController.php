@@ -748,5 +748,88 @@ class TicketsController extends BaseController {
             ]);
         }
     }
+    /**
+     * Dashboard de propinas
+     */
+    public function dashboardTips() {
+        $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
+        $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
+        $dateTo = $_GET['date_to'] ?? date('Y-m-d');
+        $tips = $this->ticketModel->getTipsByDate($dateFrom, $dateTo);
+        $this->view('tips/dashboard', [
+            'tips' => $tips
+        ]);
+    }
+    
+    public function addTip() {
+        $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Método no permitido']);
+            return;
+        }
+        $user = $this->getCurrentUser();
+        $ticketId = intval($_POST['ticket_id'] ?? 0);
+        $tipAmount = (isset($_POST['tip_amount']) && $_POST['tip_amount'] !== '') ? floatval($_POST['tip_amount']) : null;
+        $tipPercentage = (isset($_POST['tip_percentage']) && $_POST['tip_percentage'] !== '') ? floatval($_POST['tip_percentage']) : null;
+        if ($ticketId > 0) {
+            // Propina asociada a ticket (multiticket: actualizar todos los tickets con el mismo ticket_number)
+            $ticket = $this->ticketModel->find($ticketId);
+            if (!$ticket || !is_array($ticket)) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Ticket no encontrado']);
+                return;
+            }
+            $ticketNumber = isset($ticket['ticket_number']) ? $ticket['ticket_number'] : null;
+            if ($tipAmount === null && $tipPercentage !== null) {
+                // Sumar el total de todos los tickets con ese ticket_number
+                $tickets = $this->ticketModel->findBy('ticket_number', $ticketNumber, true); // true: traer todos
+                $totalGlobal = 0;
+                if (is_array($tickets) && count($tickets) > 0) {
+                    foreach ($tickets as $t) {
+                        if (is_array($t) && isset($t['total'])) {
+                            $totalGlobal += floatval($t['total']);
+                        }
+                    }
+                }
+                // Si no se encontró ningún ticket, usar el total del ticket actual
+                if ($totalGlobal == 0 && is_array($ticket) && isset($ticket['total'])) {
+                    $totalGlobal = floatval($ticket['total']);
+                }
+                // Solo calcular propina si el total es mayor a 0
+                if ($totalGlobal > 0) {
+                    $tipAmount = round($totalGlobal * $tipPercentage / 100, 2);
+                } else {
+                    $tipAmount = null;
+                }
+            }
+            $updateData = [
+                'tip_amount' => $tipAmount,
+                'tip_percentage' => $tipPercentage,
+                'tip_date' => date('Y-m-d'),
+                'tip_added_by' => $user['id']
+            ];
+            // Actualizar todos los tickets con el mismo ticket_number
+            $result = $this->ticketModel->updateByTicketNumber($ticketNumber, $updateData);
+            if ($result) {
+                echo json_encode(['success' => true, 'tip_amount' => $tipAmount, 'tip_percentage' => $tipPercentage]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'No se pudo guardar la propina']);
+            }
+        } else if ($tipAmount !== null && $tipAmount > 0) {
+            // Propina manual (sin ticket)
+            $result = $this->ticketModel->addManualTip($tipAmount, $user['id']);
+            if ($result) {
+                echo json_encode(['success' => true, 'tip_amount' => $tipAmount]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['error' => 'No se pudo guardar la propina manual']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['error' => 'Datos de propina inválidos']);
+        }
+    }
 }
 ?>

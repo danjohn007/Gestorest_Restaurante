@@ -163,6 +163,10 @@
                                    target="_blank">
                                     <i class="bi bi-printer"></i>
                                 </a>
+                                <!-- Botón de propina -->
+                                <button type="button" class="btn btn-outline-info btn-sm" title="Agregar propina" data-bs-toggle="modal" data-bs-target="#tipModal" data-ticket-id="<?= $ticket['id'] ?>" data-total="<?= $ticket['total'] ?>" data-payment-method="<?= $ticket['payment_method'] ?>">
+                                    <i class="bi bi-cash-coin"></i>
+                                </button>
                                 <?php if (in_array($user['role'], [ROLE_ADMIN, ROLE_CASHIER]) && (!isset($ticket['status']) || $ticket['status'] !== 'cancelled')): ?>
                                 <a href="<?= BASE_URL ?>/tickets/updatePaymentMethod/<?= $ticket['id'] ?>" 
                                    class="btn btn-outline-warning btn-sm" 
@@ -177,15 +181,180 @@
                                     <i class="bi bi-x-circle"></i>
                                 </a>
                                 <?php endif; ?>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+
+                                                                <!-- Botón para agregar propina -->
+                                                                <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#tipModal" data-ticket-id="<?= $ticket['id'] ?>" data-total="<?= $ticket['total'] ?>" data-payment-method="<?= $ticket['payment_method'] ?>">
+                                                                        <i class="bi bi-cash-coin"></i> Agregar Propina
+                                                                </button>
+                                                        </div>
+                                                </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                </tbody>
+                        </table>
+                </div>
+        </div>
+</div>
+
+<!-- Modal para agregar propina -->
+<div class="modal fade" id="tipModal" tabindex="-1" aria-labelledby="tipModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tipModalLabel">Agregar Propina</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="tipForm">
+                    <input type="hidden" name="ticket_id" id="tip_ticket_id">
+                    <input type="hidden" name="payment_method" id="tip_payment_method">
+                    <div class="mb-3" id="tip_percentage_group">
+                        <label for="tip_percentage" class="form-label">Selecciona porcentaje de propina:</label>
+                        <div class="btn-group w-100 mb-2" role="group">
+                            <button type="button" class="btn btn-outline-primary tip-btn" data-percentage="5">5%</button>
+                            <button type="button" class="btn btn-outline-primary tip-btn" data-percentage="10">10%</button>
+                            <button type="button" class="btn btn-outline-primary tip-btn" data-percentage="15">15%</button>
+                            <button type="button" class="btn btn-outline-primary tip-btn" data-percentage="20">20%</button>
+                        </div>
+                        <input type="number" class="form-control mb-2" id="tip_percentage" name="tip_percentage" min="0" max="100" step="0.01" placeholder="Porcentaje personalizado">
+                        <label for="tip_amount" class="form-label mt-2">Monto de propina en efectivo:</label>
+                        <input type="number" class="form-control" id="tip_amount" name="tip_amount" min="0" step="0.01" placeholder="Cantidad en efectivo dejada">
+                        <div class="form-text">Si el cliente dejó una cantidad específica en efectivo, ingrésala aquí. Si usas porcentaje, deja este campo vacío.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Propina registrada:</label>
+                        <div id="tip_calculated" class="fw-bold text-success">$0.00</div>
+                    </div>
+                </form>
+                <div class="alert alert-info mt-2" id="manualTipInfo" style="display:none;">
+                    <i class="bi bi-info-circle"></i> Si solo deseas registrar la cantidad de propina dejada, ingresa el monto y deja el campo de porcentaje vacío.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="saveTipBtn">Guardar Propina</button>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    var tipModal = document.getElementById('tipModal');
+    var tipForm = document.getElementById('tipForm');
+    var tipPercentageInput = document.getElementById('tip_percentage');
+    var tipAmountInput = document.getElementById('tip_amount');
+    var tipCalculated = document.getElementById('tip_calculated');
+    var tipManualGroup = document.getElementById('tip_manual_group');
+    var tipPercentageGroup = document.getElementById('tip_percentage_group');
+    var saveTipBtn = document.getElementById('saveTipBtn');
+    var manualTipInfo = document.getElementById('manualTipInfo');
+
+    tipModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var ticketId = button.getAttribute('data-ticket-id');
+        var total = parseFloat(button.getAttribute('data-total'));
+        var paymentMethod = button.getAttribute('data-payment-method');
+        document.getElementById('tip_ticket_id').value = ticketId;
+        document.getElementById('tip_payment_method').value = paymentMethod;
+        tipPercentageInput.value = '';
+        tipAmountInput.value = '';
+        tipCalculated.textContent = '$0.00';
+        // Si no hay ticketId, solo mostrar campo de monto manual
+        if (!ticketId || ticketId === '0') {
+            tipPercentageGroup.style.display = 'none';
+            tipManualGroup.style.display = 'block';
+            manualTipInfo.style.display = 'block';
+        } else {
+            tipPercentageGroup.style.display = 'block';
+            tipManualGroup.style.display = (paymentMethod === 'efectivo') ? 'block' : 'none';
+            manualTipInfo.style.display = 'none';
+        }
+    });
+
+    document.querySelectorAll('.tip-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var percentage = parseFloat(this.getAttribute('data-percentage'));
+            tipPercentageInput.value = percentage;
+            var ticketId = document.getElementById('tip_ticket_id').value;
+            var total = 0;
+            if (ticketId && ticketId !== '0') {
+                total = parseFloat(document.querySelector('[data-bs-target="#tipModal"][data-ticket-id="' + ticketId + '"]').getAttribute('data-total'));
+            }
+            var tipValue = (total * percentage / 100).toFixed(2);
+            tipCalculated.textContent = '$' + tipValue;
+            tipAmountInput.value = '';
+        });
+    });
+
+    tipPercentageInput.addEventListener('input', function() {
+        var percentage = parseFloat(this.value);
+        var ticketId = document.getElementById('tip_ticket_id').value;
+        var total = 0;
+        if (ticketId && ticketId !== '0') {
+            total = parseFloat(document.querySelector('[data-bs-target="#tipModal"][data-ticket-id="' + ticketId + '"]').getAttribute('data-total'));
+        }
+        if (!isNaN(percentage) && percentage > 0) {
+            var tipValue = (total * percentage / 100).toFixed(2);
+            tipCalculated.textContent = '$' + tipValue;
+            tipAmountInput.value = '';
+        } else {
+            tipCalculated.textContent = '$0.00';
+        }
+    });
+
+    tipAmountInput.addEventListener('input', function() {
+        var tipValue = parseFloat(this.value);
+        if (!isNaN(tipValue) && tipValue > 0) {
+            tipCalculated.textContent = '$' + tipValue.toFixed(2);
+            tipPercentageInput.value = '';
+        } else {
+            tipCalculated.textContent = '$0.00';
+        }
+    });
+
+    saveTipBtn.addEventListener('click', function() {
+        var ticketId = document.getElementById('tip_ticket_id').value;
+        var paymentMethod = document.getElementById('tip_payment_method').value;
+        var tipPercentage = tipPercentageInput.value ? parseFloat(tipPercentageInput.value) : null;
+        var tipAmount = tipAmountInput.value ? parseFloat(tipAmountInput.value) : null;
+        var data = new FormData();
+        data.append('ticket_id', ticketId);
+        if (!ticketId || ticketId === '0') {
+            // Propina manual (sin ticket)
+            if (tipAmount) {
+                data.append('tip_amount', tipAmount);
+                data.append('tip_percentage', '');
+            }
+        } else if (paymentMethod === 'efectivo' && tipAmount) {
+            data.append('tip_amount', tipAmount);
+            data.append('tip_percentage', '');
+        } else if (tipPercentage) {
+            data.append('tip_percentage', tipPercentage);
+            data.append('tip_amount', '');
+        }
+        fetch('<?= BASE_URL ?>/tickets/addTip', {
+            method: 'POST',
+            body: data
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                tipCalculated.textContent = '$' + (result.tip_amount ? result.tip_amount.toFixed(2) : '0.00');
+                alert('Propina guardada correctamente');
+            } else {
+                alert(result.error || 'Error al guardar la propina');
+            }
+            var modal = bootstrap.Modal.getInstance(tipModal);
+            modal.hide();
+        })
+        .catch(() => {
+            alert('Error de red al guardar la propina');
+        });
+    });
+});
+</script>
 
 <!-- Payment Method Summary -->
 <?php if (!empty($salesReport['by_payment_method'])): ?>

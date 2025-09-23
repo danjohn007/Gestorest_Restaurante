@@ -58,7 +58,7 @@
                             rows="3"
                             placeholder="Descripción detallada del platillo, ingredientes, etc."
                             maxlength="1000"
-                        ><?= htmlspecialchars($old['description'] ?? $dish['description']) ?></textarea>
+                        ><?= htmlspecialchars(($old['description'] ?? $dish['description']) ?? '') ?></textarea>
                         <?php if (isset($errors['description'])): ?>
                         <div class="invalid-feedback">
                             <?= htmlspecialchars($errors['description']) ?>

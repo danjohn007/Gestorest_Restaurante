@@ -140,6 +140,11 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
+                                <a href="<?= BASE_URL ?>/orders/print/<?= $order['id'] ?>" 
+                                   class="btn btn-outline-secondary btn-sm" 
+                                   title="Imprimir Pedido" target="_blank">
+                                    <i class="bi bi-printer"></i>
+                                </a>
                                 <a href="<?= BASE_URL ?>/orders/show/<?= $order['id'] ?>" 
                                    class="btn btn-outline-primary btn-sm" 
                                    title="Ver detalles">

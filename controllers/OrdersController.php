@@ -1,5 +1,30 @@
 <?php
 class OrdersController extends BaseController {
+    public function print($id) {
+        $order = $this->orderModel->find($id);
+        if (!$order) {
+            $this->redirect('orders', 'error', 'Pedido no encontrado');
+            return;
+        }
+        // Obtener detalles completos del pedido
+        $orderDetails = $this->orderModel->getOrdersWithDetails(['id' => $id]);
+        $orderItems = $this->orderModel->getOrderItems($id);
+        // Formatear los items para la vista de cocina
+        $items = [];
+        foreach ($orderItems as $item) {
+            $dish = $this->dishModel->find($item['dish_id']);
+            $items[] = [
+                'dish_name' => $dish ? $dish['name'] : 'Platillo',
+                'quantity' => $item['quantity'],
+                'notes' => $item['notes'] ?? ''
+            ];
+        }
+        $orderDetails = $orderDetails[0] ?? $order;
+        $orderDetails['items'] = $items;
+        $this->view('orders/print', [
+            'order' => $orderDetails
+        ]);
+    }
     private $orderModel;
     private $tableModel;
     private $dishModel;

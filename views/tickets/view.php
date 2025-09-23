@@ -1,4 +1,27 @@
-<?php $title = 'Ticket ' . $ticket['ticket_number']; ?>
+<?php 
+$title = 'Ticket ' . $ticket['ticket_number']; 
+// Calcular totales reales sumando todos los productos
+$total = 0;
+$subtotal = 0;
+$tax = 0;
+if (!empty($ticket['order_ids'])) {
+    foreach ($ticket['order_ids'] as $orderId) {
+        if (!empty($ticket['orders_items'][$orderId])) {
+            foreach ($ticket['orders_items'][$orderId] as $item) {
+                $total += floatval($item['subtotal']);
+            }
+        }
+    }
+    $subtotal = round($total / 1.16, 2);
+    $tax = round($total - $subtotal, 2);
+} else if (!empty($ticket['items'])) {
+    foreach ($ticket['items'] as $item) {
+        $total += floatval($item['subtotal']);
+    }
+    $subtotal = round($total / 1.16, 2);
+    $tax = round($total - $subtotal, 2);
+}
+?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-receipt"></i> Ticket <?= htmlspecialchars($ticket['ticket_number']) ?></h1>
@@ -150,7 +173,7 @@
                                             <strong>Subtotal:</strong>
                                         </div>
                                         <div class="col-6 text-end">
-                                            $<?= number_format($ticket['subtotal'], 2) ?>
+                                            $<?= number_format($subtotal, 2) ?>
                                         </div>
                                     </div>
                                     <div class="row mb-2">
@@ -158,16 +181,15 @@
                                             <strong>IVA (16%):</strong>
                                         </div>
                                         <div class="col-6 text-end">
-                                            $<?= number_format($ticket['tax'], 2) ?>
+                                            $<?= number_format($tax, 2) ?>
                                         </div>
                                     </div>
-                                    <hr>
-                                    <div class="row">
+                                    <div class="row mb-2">
                                         <div class="col-6">
-                                            <h5 class="mb-0">Total:</h5>
+                                            <strong>Total:</strong>
                                         </div>
                                         <div class="col-6 text-end">
-                                            <h5 class="mb-0 text-success">$<?= number_format($ticket['total'], 2) ?></h5>
+                                            $<?= number_format($total, 2) ?>
                                         </div>
                                     </div>
                                 </div>
@@ -200,4 +222,4 @@ function getPaymentMethodText($method) {
     
     return $methods[$method] ?? $method;
 }
-?>
+

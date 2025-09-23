@@ -159,7 +159,7 @@
                         <td>
                             <i class="bi bi-person-fill text-info"></i> 
                             <small class="text-muted">Cliente:</small><br>
-                            <?= htmlspecialchars($order['customer_name'] ?: $order['order_customer_name'] ?: 'Público') ?>
+                            <?= htmlspecialchars($order['customer_name'] ?: ($order['order_customer_name'] ?? 'Público')) ?>
                             <?php if (!empty($order['customer_phone'])): ?>
                                 <br><small class="text-muted"><?= htmlspecialchars($order['customer_phone']) ?></small>
                             <?php endif; ?>

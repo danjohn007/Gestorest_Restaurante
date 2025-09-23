@@ -117,11 +117,11 @@
                                        class="btn btn-outline-primary" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <button type="button" class="btn btn-outline-danger" 
-                                            title="Eliminar" 
-                                            onclick="confirmDelete(<?= $dish['id'] ?>, '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <form method="POST" action="<?= BASE_URL ?>/dishes/delete/<?= $dish['id'] ?>" style="display: inline;" onsubmit="return confirm('¿Eliminar platillo <?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>?')">
+                                        <button type="submit" class="btn btn-outline-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -174,36 +174,3 @@
     </div>
 </div>
 
-<!-- Modal de confirmación para eliminar -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar el platillo <strong id="dishName"></strong>?</p>
-                <p class="text-muted small">Esta acción no se puede deshacer.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function confirmDelete(dishId, dishName) {
-    document.getElementById('dishName').textContent = dishName;
-    document.getElementById('deleteForm').action = '<?= BASE_URL ?>/dishes/delete/' + dishId;
-    
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    deleteModal.show();
-}
-</script>

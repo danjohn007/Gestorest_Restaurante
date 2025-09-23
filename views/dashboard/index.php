@@ -49,6 +49,21 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-3 mb-3">
+            <a href="<?= BASE_URL ?>/tickets/dashboardTips" class="card stat-card info text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted mb-1">Reporte de Propinas</h6>
+                            <h3 class="mb-0"><i class="bi bi-cash-coin"></i></h3>
+                        </div>
+                        <div class="text-info">
+                            <i class="bi bi-cash-coin" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
         
         <div class="col-md-3 mb-3">
             <div class="card stat-card warning">
