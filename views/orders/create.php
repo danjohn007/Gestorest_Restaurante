@@ -24,6 +24,24 @@
                     </h5>
                 </div>
                 <div class="card-body">
+                    <!-- Category Filter Buttons -->
+                    <div class="mb-3" id="categoryFilterContainer">
+                        <div class="btn-group" role="group" aria-label="Filtrar por categoría">
+                            <button type="button" class="btn btn-outline-primary btn-category active" data-category="all">Todas</button>
+                            <?php 
+                            $categories = array();
+                            foreach ($dishes ?? [] as $dish) {
+                                if (!in_array($dish['category'], $categories)) {
+                                    $categories[] = $dish['category'];
+                                }
+                            }
+                            foreach ($categories as $cat): ?>
+                                <button type="button" class="btn btn-outline-primary btn-category" data-category="<?= strtolower(htmlspecialchars($cat)) ?>">
+                                    <?= htmlspecialchars($cat) ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label for="table_id" class="form-label">Mesa *</label>
                         <select class="form-select <?= isset($errors['table_id']) ? 'is-invalid' : '' ?>" 
@@ -31,7 +49,7 @@
                                 name="table_id" 
                                 required>
                             <option value="">Seleccionar mesa...</option>
-                            <?php foreach ($tables as $table): ?>
+                            <?php foreach ($tables ?? [] as $table): ?>
                                 <option value="<?= $table['id'] ?>" 
                                         <?= (($old['table_id'] ?? '') == $table['id']) ? 'selected' : '' ?>>
                                     Mesa <?= $table['number'] ?> 
@@ -48,7 +66,7 @@
                         <?php endif; ?>
                     </div>
                     
-                    <?php if ($user['role'] === ROLE_ADMIN || $user['role'] === ROLE_CASHIER): ?>
+                    <?php if (isset($user) && ($user['role'] === ROLE_ADMIN || $user['role'] === ROLE_CASHIER)): ?>
                     <div class="mb-3">
                         <label for="waiter_id" class="form-label">Mesero *</label>
                         <select class="form-select <?= isset($errors['waiter_id']) ? 'is-invalid' : '' ?>" 
@@ -56,7 +74,7 @@
                                 name="waiter_id" 
                                 required>
                             <option value="">Seleccionar mesero...</option>
-                            <?php foreach ($waiters as $waiter): ?>
+                            <?php foreach ($waiters ?? [] as $waiter): ?>
                                 <option value="<?= $waiter['id'] ?>" 
                                         <?= (($old['waiter_id'] ?? '') == $waiter['id']) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($waiter['name']) ?> 
@@ -145,6 +163,10 @@
                                 </div>
                             </div>
                             <h3 class="text-primary mb-0" id="orderTotal">$0.00</h3>
+                            <div class="mt-3">
+                                <h6 class="mb-2">Platillos agregados:</h6>
+                                <ul id="addedDishesList" class="list-group"></ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -165,7 +187,7 @@
                             <button type="button" class="btn btn-outline-primary btn-category active" data-category="all">Todas</button>
                             <?php 
                             $categories = array();
-                            foreach ($dishes as $dish) {
+                            foreach ($dishes ?? [] as $dish) {
                                 if (!in_array($dish['category'], $categories)) {
                                     $categories[] = $dish['category'];
                                 }
@@ -211,7 +233,7 @@
                     <div id="dishes_container">
                     <?php 
                     $currentCategory = '';
-                    foreach ($dishes as $dish): 
+                    foreach ($dishes ?? [] as $dish): 
                         if ($dish['category'] !== $currentCategory):
                             if ($currentCategory !== ''): ?>
                                 </div>
@@ -605,16 +627,62 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateTotal() {
         let total = 0;
+        const addedDishes = [];
+        
         document.querySelectorAll('.dish-quantity[name*="[quantity]"]').forEach(function(input) {
             const quantity = parseInt(input.value) || 0;
             const price = parseFloat(input.dataset.price) || 0;
+            const dishId = input.dataset.dishId;
+            
+            if (quantity > 0) {
+                const dishName = document.querySelector(`[data-dish-id="${dishId}"] .card-title`).textContent;
+                const notesInput = document.querySelector(`input[name="items[${dishId}][notes]"]`);
+                const notes = notesInput ? notesInput.value : '';
+                
+                addedDishes.push({
+                    name: dishName,
+                    quantity: quantity,
+                    price: price,
+                    subtotal: quantity * price,
+                    notes: notes
+                });
+            }
+            
             total += quantity * price;
         });
         
         totalElement.textContent = '$' + total.toFixed(2);
+        updateAddedDishesList(addedDishes);
     }
-    // Inicializar lista al cargar
-    updateAddedDishesList();
+    
+    function updateAddedDishesList(dishes = []) {
+        const addedDishesList = document.getElementById('addedDishesList');
+        if (!addedDishesList) return;
+        
+        addedDishesList.innerHTML = '';
+        
+        if (dishes.length === 0) {
+            addedDishesList.innerHTML = '<li class="list-group-item text-muted">No hay platillos agregados</li>';
+            return;
+        }
+        
+        dishes.forEach(dish => {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item d-flex justify-content-between align-items-start';
+            listItem.innerHTML = `
+                <div class="ms-2 me-auto">
+                    <div class="fw-bold">${dish.name}</div>
+                    <small class="text-muted">Cantidad: ${dish.quantity} × $${dish.price.toFixed(2)}</small>
+                    ${dish.notes ? '<br><small class="text-info">Nota: ' + dish.notes + '</small>' : ''}
+                </div>
+                <span class="badge bg-primary rounded-pill">$${dish.subtotal.toFixed(2)}</span>
+            `;
+            addedDishesList.appendChild(listItem);
+        });
+    }
+    
+    // Inicializar al cargar
+    updateTotal();
 });
 </script>
 
