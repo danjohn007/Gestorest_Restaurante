@@ -9,14 +9,18 @@ class OrdersController extends BaseController {
         // Obtener detalles completos del pedido
         $orderDetails = $this->orderModel->getOrdersWithDetails(['id' => $id]);
         $orderItems = $this->orderModel->getOrderItems($id);
-        // Formatear los items para la vista de cocina
+        // Formatear los items para la vista
         $items = [];
         foreach ($orderItems as $item) {
             $dish = $this->dishModel->find($item['dish_id']);
+            $price = $dish ? $dish['price'] : 0;
             $items[] = [
                 'dish_name' => $dish ? $dish['name'] : 'Platillo',
                 'quantity' => $item['quantity'],
-                'notes' => $item['notes'] ?? ''
+                'notes' => $item['notes'] ?? '',
+                'price' => $price,
+                'unit_price' => $price,
+                'subtotal' => $price * $item['quantity']
             ];
         }
         $orderDetails = $orderDetails[0] ?? $order;

@@ -1,10 +1,15 @@
 <?php $title = 'Detalles del Pedido #' . $order['id']; ?>
+<link rel="stylesheet" href="<?= BASE_URL ?>/public/css/orders.css">
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-clipboard-check"></i> Pedido #<?= $order['id'] ?></h1>
-    <div>
+    <div class="btn-action-group">
+        <a href="<?= BASE_URL ?>/orders/print/<?= $order['id'] ?>" 
+           class="btn btn-print" target="_blank">
+            <i class="bi bi-printer-fill"></i> Imprimir para Cocina
+        </a>
         <?php if ($order['status'] !== ORDER_DELIVERED): ?>
-        <a href="<?= BASE_URL ?>/orders/edit/<?= $order['id'] ?>" class="btn btn-warning">
+        <a href="<?= BASE_URL ?>/orders/edit/<?= $order['id'] ?>" class="btn btn-edit-order">
             <i class="bi bi-pencil"></i> Editar
         </a>
         <?php endif; ?>

@@ -1,9 +1,103 @@
 <?php $title = 'Gestión de Pedidos'; ?>
+<link rel="stylesheet" href="<?= BASE_URL ?>/public/css/orders.css">
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-clipboard-check"></i> 
         <?= isset($showFuture) && $showFuture ? 'Pedidos Futuros' : 'Pedidos de Hoy' ?>
     </h1>
+    <div>
+        <a href="<?= BASE_URL ?>/orders/create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuevo Pedido
+        </a>
+        <a href="<?= BASE_URL ?>/orders/expired" class="btn btn-warning">
+            <i class="bi bi-exclamation-triangle"></i> Pedidos Vencidos
+        </a>
+        <a href="<?= BASE_URL ?>/orders/future" class="btn btn-info">
+            <i class="bi bi-calendar-plus"></i> Pedidos Futuros
+        </a>
+    </div>
+</div>
+
+<style>
+.status-pendiente_confirmacion { background-color: #e74c3c; color: #fff; }
+.status-pendiente { background-color: #ffc107; color: #000; }
+.status-en_preparacion { background-color: #fd7e14; color: #fff; }
+.status-listo { background-color: #198754; color: #fff; }
+.status-entregado { background-color: #0dcaf0; color: #000; }
+
+/* Estilos mejorados para botones de acciones */
+.print-order-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.print-order-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838 0%, #1abc9c 100%) !important;
+    color: white !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border: none !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%) !important;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    border: none !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838 0%, #1abc9c 100%) !important;
+}
+
+.btn-outline-warning {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-warning:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
+/* Mejoras para la tabla */
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.002);
+    transition: all 0.2s ease;
+}
+
+.btn-group-sm .btn {
+    margin: 0 1px;
+    border-radius: 6px !important;
+}
+
+/* Animación para los iconos */
+.btn i {
+    transition: transform 0.2s ease;
+}
+
+.btn:hover i {
+    transform: scale(1.1);
+}
+</style> </h1>
     <div>
         <?php if (!isset($showFuture) || !$showFuture): ?>
         <a href="<?= BASE_URL ?>/orders?future=1" class="btn btn-info me-2">
@@ -139,16 +233,16 @@
                             </small>
                         </td>
                         <td>
-                            <div class="btn-group btn-group-sm" role="group">
+                            <div class="btn-action-group">
                                 <a href="<?= BASE_URL ?>/orders/print/<?= $order['id'] ?>" 
-                                   class="btn btn-outline-secondary btn-sm" 
-                                   title="Imprimir Pedido" target="_blank">
-                                    <i class="bi bi-printer"></i>
+                                   class="btn btn-print btn-sm" 
+                                   title="🖨️ Imprimir Pedido para Cocina" target="_blank">
+                                    <i class="bi bi-printer-fill"></i>
                                 </a>
-                                <a href="<?= BASE_URL ?>/orders/show/<?= $order['id'] ?>" 
-                                   class="btn btn-outline-primary btn-sm" 
-                                   title="Ver detalles">
-                                    <i class="bi bi-eye"></i>
+                                <a href="<?= BASE_URL ?>/orders/view/<?= $order['id'] ?>" 
+                                   class="btn btn-view-order btn-sm" 
+                                   title="👁️ Ver detalles completos">
+                                    <i class="bi bi-eye-fill"></i>
                                 </a>
                                 <?php if ($order['status'] === ORDER_PENDING_CONFIRMATION && ($user['role'] === ROLE_ADMIN || $user['role'] === ROLE_CASHIER)): ?>
                                 <a href="<?= BASE_URL ?>/orders/confirmPublicOrder/<?= $order['id'] ?>" 
@@ -159,7 +253,7 @@
                                 <?php endif; ?>
                                 <?php if ($user['role'] === ROLE_ADMIN && $order['status'] !== ORDER_DELIVERED && $order['status'] !== ORDER_PENDING_CONFIRMATION): ?>
                                 <a href="<?= BASE_URL ?>/orders/edit/<?= $order['id'] ?>" 
-                                   class="btn btn-outline-warning btn-sm" 
+                                   class="btn btn-edit-order btn-sm" 
                                    title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>

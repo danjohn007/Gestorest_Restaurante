@@ -1,0 +1,281 @@
+/* Estilos específicos para el módulo de pedidos */
+
+/* Botones de acción con estilos mejorados */
+.btn-action-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.btn-print {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.btn-print:hover {
+    background: linear-gradient(135deg, #218838, #1ba085);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    color: white;
+}
+
+.btn-edit-order {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.btn-edit-order:hover {
+    background: linear-gradient(135deg, #e0a800, #dc6502);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+    color: white;
+}
+
+.btn-view-order {
+    background: linear-gradient(135deg, #007bff, #6610f2);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.btn-view-order:hover {
+    background: linear-gradient(135deg, #0056b3, #520dc2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    color: white;
+}
+
+/* Tarjetas de pedidos */
+.order-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: none;
+    overflow: hidden;
+}
+
+.order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.order-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.order-body {
+    padding: 20px;
+}
+
+/* Estados de pedidos con colores */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    color: #856404;
+}
+
+.status-preparing {
+    background: linear-gradient(135deg, #d1ecf1, #81ecec);
+    color: #0c5460;
+}
+
+.status-ready {
+    background: linear-gradient(135deg, #d4edda, #00b894);
+    color: #155724;
+}
+
+.status-delivered {
+    background: linear-gradient(135deg, #f8d7da, #fab1a0);
+    color: #721c24;
+}
+
+/* Lista de items del pedido */
+.order-items {
+    max-height: 200px;
+    overflow-y: auto;
+    margin: 10px 0;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.item-name {
+    font-weight: 500;
+    color: #495057;
+}
+
+.item-quantity {
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    margin: 0 8px;
+}
+
+.item-price {
+    font-weight: 600;
+    color: #28a745;
+}
+
+/* Información del pedido */
+.order-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.info-item {
+    text-align: center;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.info-label {
+    font-size: 0.8em;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #495057;
+    margin-top: 4px;
+}
+
+/* Total del pedido */
+.order-total {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.total-label {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
+.total-amount {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+/* Filtros y búsqueda */
+.filters-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .btn-action-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-print,
+    .btn-edit-order,
+    .btn-view-order {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .order-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Animaciones de carga */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Efectos hover para las tarjetas */
+.card-hover-effect:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para notificaciones */
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
