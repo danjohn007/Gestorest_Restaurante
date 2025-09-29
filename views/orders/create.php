@@ -25,23 +25,6 @@
                 </div>
                 <div class="card-body">
                     <!-- Category Filter Buttons -->
-                    <div class="mb-3" id="categoryFilterContainer">
-                        <div class="btn-group" role="group" aria-label="Filtrar por categoría">
-                            <button type="button" class="btn btn-outline-primary btn-category active" data-category="all">Todas</button>
-                            <?php 
-                            $categories = array();
-                            foreach ($dishes ?? [] as $dish) {
-                                if (!in_array($dish['category'], $categories)) {
-                                    $categories[] = $dish['category'];
-                                }
-                            }
-                            foreach ($categories as $cat): ?>
-                                <button type="button" class="btn btn-outline-primary btn-category" data-category="<?= strtolower(htmlspecialchars($cat)) ?>">
-                                    <?= htmlspecialchars($cat) ?>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
                     <div class="mb-3">
                         <label for="table_id" class="form-label">Mesa *</label>
                         <select class="form-select <?= isset($errors['table_id']) ? 'is-invalid' : '' ?>" 
