@@ -10,7 +10,7 @@
 <?php
 // Define constants for testing
 define('BASE_PATH', __DIR__);
-define('BASE_URL', '/administración');
+define('BASE_URL', '/restaurante');
 ?>
     <div class="container mt-5">
         <h1>Prueba de Sistema de Imágenes</h1>

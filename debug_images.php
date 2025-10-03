@@ -1,7 +1,7 @@
 <?php
 // Diagnóstico de sistema de imágenes
 define('BASE_PATH', __DIR__);
-define('BASE_URL', '/administración');
+define('BASE_URL', '/restaurante');
 
 // Include configuration to access database
 require_once BASE_PATH . '/config/config.php';
