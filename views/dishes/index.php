@@ -81,12 +81,6 @@
                         <tr>
                             <td class="text-center">
                                 <?php if ($dish['image']): ?>
-                                    <!-- Debug info temporal -->
-                                    <div class="small text-info mb-1">
-                                        <strong>Debug URL:</strong><br>
-                                        <?= htmlspecialchars(BASE_URL . '/' . $dish['image']) ?>
-                                    </div>
-                                    
                                     <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
                                          alt="<?= htmlspecialchars($dish['name']) ?>" 
                                          class="img-thumbnail dish-image-preview"
@@ -94,8 +88,7 @@
                                          onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <div class="alert alert-warning py-1 px-2 small" style="display: none;">
-                                        <strong>Error al cargar:</strong><br>
-                                        <?= htmlspecialchars(BASE_URL . '/' . $dish['image']) ?>
+                                        <strong>Error al cargar</strong>
                                     </div>
                                 <?php else: ?>
                                     <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
