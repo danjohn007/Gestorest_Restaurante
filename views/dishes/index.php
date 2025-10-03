@@ -1,5 +1,7 @@
 <?php $title = ($user['role'] === ROLE_WAITER) ? 'Consultar Menú' : 'Gestión de Menú'; ?>
 
+<link rel="stylesheet" href="<?= BASE_URL ?>/public/css/dishes.css">
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-cup-hot"></i> <?= ($user['role'] === ROLE_WAITER) ? 'Consultar Menú' : 'Gestión de Menú' ?></h1>
     <?php if ($user['role'] === ROLE_ADMIN): ?>
@@ -66,6 +68,7 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
+                            <th style="width: 80px;">Imagen</th>
                             <th>Platillo</th>
                             <th>Categoría</th>
                             <th>Precio</th>
@@ -76,6 +79,20 @@
                     <tbody>
                         <?php foreach ($dishes as $dish): ?>
                         <tr>
+                            <td class="text-center">
+                                <?php if ($dish['image']): ?>
+                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
+                                         alt="<?= htmlspecialchars($dish['name']) ?>" 
+                                         class="img-thumbnail dish-image-preview"
+                                         style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                                         onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')">
+                                <?php else: ?>
+                                    <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
+                                         style="width: 60px; height: 60px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <div>
                                     <h6 class="mb-1"><?= htmlspecialchars($dish['name']) ?></h6>
@@ -174,3 +191,28 @@
     </div>
 </div>
 
+<!-- Modal para mostrar imagen en tamaño completo -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Imagen del Platillo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showImageModal(imageSrc, dishName) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('modalImage').alt = dishName;
+    document.getElementById('imageModalLabel').textContent = dishName;
+    
+    var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    imageModal.show();
+}
+</script>

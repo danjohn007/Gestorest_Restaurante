@@ -1,5 +1,7 @@
 <?php $title = 'Detalles del Platillo'; ?>
 
+<link rel="stylesheet" href="<?= BASE_URL ?>/public/css/dishes.css">
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-eye"></i> Detalles del Platillo</h1>
     <div>
@@ -13,7 +15,30 @@
 </div>
 
 <div class="row">
-    <div class="col-md-8">
+    <!-- Imagen del platillo -->
+    <?php if ($dish['image']): ?>
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="bi bi-image"></i> Imagen
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
+                     alt="<?= htmlspecialchars($dish['name']) ?>" 
+                     class="img-fluid rounded shadow-sm"
+                     style="max-height: 300px; cursor: pointer;"
+                     onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')">
+                <div class="mt-2">
+                    <small class="text-muted">Click para ver en tamaño completo</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+    
+    <div class="<?= $dish['image'] ? 'col-md-8' : 'col-md-8' ?>">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">
@@ -99,3 +124,29 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para mostrar imagen en tamaño completo -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Imagen del Platillo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showImageModal(imageSrc, dishName) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('modalImage').alt = dishName;
+    document.getElementById('imageModalLabel').textContent = dishName;
+    
+    var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    imageModal.show();
+}
+</script>
