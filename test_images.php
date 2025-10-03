@@ -66,6 +66,9 @@ define('BASE_URL', '/administración');
                                 '<span class="text-danger">✗ No</span>' ?>
                         </p>
                         <p><strong>URL completa de prueba:</strong> 
+                            <code>https://contabot.digital<?= BASE_URL ?>/public/uploads/dishes/test_image.svg</code>
+                        </p>
+                        <p><strong>URL relativa de prueba:</strong> 
                             <code><?= BASE_URL ?>/public/uploads/dishes/test_image.svg</code>
                         </p>
                     </div>
