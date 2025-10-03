@@ -99,6 +99,10 @@ class DishesController extends BaseController {
     private function processCreate() {
         $errors = $this->validateDishInput($_POST);
         
+        // Validate image if provided
+        $imageErrors = $this->validateImageUpload($_FILES['image'] ?? null);
+        $errors = array_merge($errors, $imageErrors);
+        
         if (!empty($errors)) {
             $categories = $this->dishModel->getCategories();
             $this->view('dishes/create', [
@@ -117,8 +121,25 @@ class DishesController extends BaseController {
             'has_validity' => isset($_POST['has_validity']) ? 1 : 0,
             'validity_start' => null,
             'validity_end' => null,
-            'availability_days' => '1234567' // Default: all days
+            'availability_days' => '1234567', // Default: all days
+            'image' => null
         ];
+        
+        // Handle image upload
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            try {
+                $imagePath = $this->uploadDishImage($_FILES['image']);
+                $dishData['image'] = $imagePath;
+            } catch (Exception $e) {
+                $categories = $this->dishModel->getCategories();
+                $this->view('dishes/create', [
+                    'error' => 'Error al subir la imagen: ' . $e->getMessage(),
+                    'old' => $_POST,
+                    'categories' => $categories
+                ]);
+                return;
+            }
+        }
         
         // Handle validity dates if validity is enabled
         if ($dishData['has_validity']) {
@@ -144,6 +165,11 @@ class DishesController extends BaseController {
                 throw new Exception('Error al crear el platillo');
             }
         } catch (Exception $e) {
+            // If there was an error and we uploaded an image, delete it
+            if (isset($dishData['image']) && $dishData['image']) {
+                $this->deleteImage($dishData['image']);
+            }
+            
             $categories = $this->dishModel->getCategories();
             $this->view('dishes/create', [
                 'error' => 'Error al crear el platillo: ' . $e->getMessage(),
@@ -176,6 +202,10 @@ class DishesController extends BaseController {
     private function processEdit($id) {
         $errors = $this->validateDishInput($_POST, $id);
         
+        // Validate image if provided
+        $imageErrors = $this->validateImageUpload($_FILES['image'] ?? null);
+        $errors = array_merge($errors, $imageErrors);
+        
         $dish = $this->dishModel->find($id);
         
         if (!empty($errors)) {
@@ -199,6 +229,29 @@ class DishesController extends BaseController {
             'validity_end' => null,
             'availability_days' => '1234567' // Default: all days
         ];
+        
+        // Handle image upload
+        $oldImage = $dish['image'];
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            try {
+                $imagePath = $this->uploadDishImage($_FILES['image']);
+                $dishData['image'] = $imagePath;
+                
+                // Delete old image if it exists
+                if ($oldImage) {
+                    $this->deleteImage($oldImage);
+                }
+            } catch (Exception $e) {
+                $categories = $this->dishModel->getCategories();
+                $this->view('dishes/edit', [
+                    'error' => 'Error al subir la imagen: ' . $e->getMessage(),
+                    'dish' => $dish,
+                    'old' => $_POST,
+                    'categories' => $categories
+                ]);
+                return;
+            }
+        }
         
         // Handle validity dates if validity is enabled
         if ($dishData['has_validity']) {
@@ -224,6 +277,11 @@ class DishesController extends BaseController {
                 throw new Exception('Error al actualizar el platillo');
             }
         } catch (Exception $e) {
+            // If there was an error and we uploaded a new image, delete it and restore old one
+            if (isset($dishData['image']) && $dishData['image'] && $dishData['image'] !== $oldImage) {
+                $this->deleteImage($dishData['image']);
+            }
+            
             $categories = $this->dishModel->getCategories();
             $this->view('dishes/edit', [
                 'error' => 'Error al actualizar el platillo: ' . $e->getMessage(),
@@ -247,6 +305,11 @@ class DishesController extends BaseController {
             $success = $this->dishModel->softDelete($id);
             
             if ($success) {
+                // Delete image file if it exists
+                if ($dish['image']) {
+                    $this->deleteImage($dish['image']);
+                }
+                
                 $this->redirect('dishes', 'success', 'Platillo eliminado correctamente');
             } else {
                 throw new Exception('Error al eliminar el platillo');
@@ -372,6 +435,83 @@ class DishesController extends BaseController {
         }
         
         return $errors;
+    }
+    
+    /**
+     * Validate image upload
+     */
+    private function validateImageUpload($file) {
+        $errors = [];
+        
+        if (!$file || $file['error'] === UPLOAD_ERR_NO_FILE) {
+            return $errors; // No file uploaded, which is okay
+        }
+        
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $errors['image'] = 'Error al subir el archivo';
+            return $errors;
+        }
+        
+        // Check file size (5MB max)
+        $maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if ($file['size'] > $maxSize) {
+            $errors['image'] = 'El archivo es demasiado grande. Máximo 5MB permitido';
+            return $errors;
+        }
+        
+        // Check file type
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        if (!in_array($mimeType, $allowedTypes)) {
+            $errors['image'] = 'Tipo de archivo no permitido. Solo se permiten JPG, PNG y GIF';
+            return $errors;
+        }
+        
+        // Check if it's a valid image
+        $imageInfo = getimagesize($file['tmp_name']);
+        if ($imageInfo === false) {
+            $errors['image'] = 'El archivo no es una imagen válida';
+            return $errors;
+        }
+        
+        return $errors;
+    }
+    
+    /**
+     * Upload dish image
+     */
+    private function uploadDishImage($file) {
+        $uploadDir = 'public/uploads/dishes/';
+        
+        // Create directory if it doesn't exist
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('dish_') . '_' . time() . '.' . strtolower($extension);
+        $uploadPath = $uploadDir . $filename;
+        
+        // Move uploaded file
+        if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            throw new Exception('Error al mover el archivo subido');
+        }
+        
+        // Return relative path for database storage
+        return 'uploads/dishes/' . $filename;
+    }
+    
+    /**
+     * Delete image file
+     */
+    private function deleteImage($imagePath) {
+        if ($imagePath && file_exists('public/' . $imagePath)) {
+            unlink('public/' . $imagePath);
+        }
     }
 }
 ?>
