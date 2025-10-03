@@ -1,5 +1,7 @@
 <?php $title = 'Editar Platillo'; ?>
 
+<link rel="stylesheet" href="<?= BASE_URL ?>/public/css/dishes.css">
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-pencil-square"></i> Editar Platillo</h1>
     <a href="<?= BASE_URL ?>/dishes" class="btn btn-secondary">
@@ -25,7 +27,7 @@
                 </div>
                 <?php endif; ?>
 
-                <form method="POST" class="needs-validation" novalidate>
+                <form method="POST" class="needs-validation" enctype="multipart/form-data" novalidate>
                     <div class="mb-3">
                         <label for="name" class="form-label">
                             <i class="bi bi-cup-hot"></i> Nombre del Platillo *
@@ -66,6 +68,54 @@
                         <?php endif; ?>
                         <div class="form-text">
                             Descripción opcional del platillo (máximo 1000 caracteres)
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="image" class="form-label">
+                            <i class="bi bi-image"></i> Imagen del Platillo
+                        </label>
+                        
+                        <!-- Imagen actual si existe -->
+                        <?php if ($dish['image']): ?>
+                        <div class="mb-2">
+                            <label class="form-label text-muted small">Imagen actual:</label>
+                            <div class="d-flex align-items-center">
+                                <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
+                                     alt="Imagen actual" 
+                                     class="img-thumbnail me-3" 
+                                     style="max-width: 100px; max-height: 100px;">
+                                <small class="text-muted">Selecciona una nueva imagen para reemplazar la actual</small>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <input 
+                            type="file" 
+                            class="form-control <?= isset($errors['image']) ? 'is-invalid' : '' ?>" 
+                            id="image" 
+                            name="image" 
+                            accept="image/*"
+                            onchange="previewImage(this)"
+                        >
+                        <?php if (isset($errors['image'])): ?>
+                        <div class="invalid-feedback">
+                            <?= htmlspecialchars($errors['image']) ?>
+                        </div>
+                        <?php endif; ?>
+                        <div class="form-text">
+                            Imagen opcional del platillo (JPG, PNG, GIF - máximo 5MB)
+                        </div>
+                        
+                        <!-- Vista previa de la nueva imagen -->
+                        <div id="imagePreview" class="mt-3" style="display: none;">
+                            <label class="form-label text-muted small">Nueva imagen:</label>
+                            <div class="d-flex align-items-center">
+                                <img id="preview" src="#" alt="Vista previa" class="img-thumbnail me-3" style="max-width: 100px; max-height: 100px;">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage()">
+                                    <i class="bi bi-trash"></i> Quitar nueva imagen
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -289,4 +339,39 @@ document.getElementById('has_validity').addEventListener('change', function() {
     var validitySettings = document.getElementById('validity-settings');
     validitySettings.style.display = this.checked ? 'block' : 'none';
 });
+
+// Image preview functionality
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        
+        // Validar tamaño del archivo (5MB máximo)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
+            input.value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            return;
+        }
+        
+        // Validar tipo de archivo
+        if (!file.type.match('image.*')) {
+            alert('Por favor selecciona un archivo de imagen válido.');
+            input.value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            return;
+        }
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImage() {
+    document.getElementById('image').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+}
 </script>
