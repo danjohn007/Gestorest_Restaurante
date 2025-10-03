@@ -1,0 +1,77 @@
+/* Estilos para el sistema de gestión de platillos */
+
+/* Vista de imagen en el listado */
+.dish-image-preview {
+    transition: transform 0.2s ease-in-out;
+}
+
+.dish-image-preview:hover {
+    transform: scale(1.05);
+}
+
+/* Placeholder para platillos sin imagen */
+.dish-placeholder {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #dee2e6;
+    transition: all 0.2s ease-in-out;
+}
+
+.dish-placeholder:hover {
+    border-color: #6c757d;
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+/* Vista previa de imagen en formularios */
+#imagePreview img {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+#imagePreview img:hover {
+    transform: scale(1.02);
+}
+
+/* Modal de imagen */
+.modal-body img {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Responsividad para imágenes */
+@media (max-width: 768px) {
+    .dish-image-preview {
+        width: 50px !important;
+        height: 50px !important;
+    }
+    
+    .dish-placeholder {
+        width: 50px !important;
+        height: 50px !important;
+    }
+}
+
+/* Animaciones de carga */
+.image-loading {
+    opacity: 0.6;
+    filter: blur(2px);
+    transition: all 0.3s ease-in-out;
+}
+
+.image-loaded {
+    opacity: 1;
+    filter: blur(0);
+}
+
+/* Indicador de archivo seleccionado */
+.file-input-feedback {
+    padding: 0.5rem;
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 0.375rem;
+    color: #0c5460;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.file-input-feedback.show {
+    display: block;
+}
