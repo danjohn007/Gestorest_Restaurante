@@ -5,11 +5,11 @@ RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|ico|svg)$ [NC]
 RewriteRule ^(.*)$ - [L]
 
 # Allow direct access to uploads directory - handle URL encoding
-RewriteCond %{REQUEST_URI} ^/administraci%C3%B3n/public/uploads/ [NC]
+RewriteCond %{REQUEST_URI} ^/restaurante/public/uploads/ [NC]
 RewriteRule ^(.*)$ - [L]
 
 # Allow direct access to uploads directory - handle normal encoding
-RewriteCond %{REQUEST_URI} ^/administración/public/uploads/ [NC]
+RewriteCond %{REQUEST_URI} ^/restaurante/public/uploads/ [NC]
 RewriteRule ^(.*)$ - [L]
 
 # Default routing for other requests
