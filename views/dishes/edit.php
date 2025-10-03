@@ -81,10 +81,16 @@
                         <div class="mb-2">
                             <label class="form-label text-muted small">Imagen actual:</label>
                             <div class="d-flex align-items-center">
-                                <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
+                                <?php
+                                $imageName = basename($dish['image']);
+                                $imageUrl = BASE_URL . '/image_server.php?file=' . urlencode($imageName);
+                                ?>
+                                <img src="<?= $imageUrl ?>" 
                                      alt="Imagen actual" 
                                      class="img-thumbnail me-3" 
-                                     style="max-width: 100px; max-height: 100px;">
+                                     style="max-width: 100px; max-height: 100px;"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <span class="text-danger small" style="display: none;">Error al cargar imagen</span>
                                 <small class="text-muted">Selecciona una nueva imagen para reemplazar la actual</small>
                             </div>
                         </div>

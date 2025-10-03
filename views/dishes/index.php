@@ -81,21 +81,26 @@
                         <tr>
                             <td class="text-center">
                                 <?php if ($dish['image']): ?>
+                                    <?php
+                                    // Extraer solo el nombre del archivo de la ruta completa
+                                    $imageName = basename($dish['image']);
+                                    $imageUrl = BASE_URL . '/image_server.php?file=' . urlencode($imageName);
+                                    ?>
                                     <!-- Debug info temporal -->
                                     <div class="small text-info mb-1">
-                                        <strong>Debug URL:</strong><br>
-                                        <?= htmlspecialchars(BASE_URL . '/' . $dish['image']) ?>
+                                        <strong>Nueva URL:</strong><br>
+                                        <?= htmlspecialchars($imageUrl) ?>
                                     </div>
                                     
-                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
+                                    <img src="<?= $imageUrl ?>" 
                                          alt="<?= htmlspecialchars($dish['name']) ?>" 
                                          class="img-thumbnail dish-image-preview"
                                          style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                                         onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
+                                         onclick="showImageModal('<?= $imageUrl ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <div class="alert alert-warning py-1 px-2 small" style="display: none;">
                                         <strong>Error al cargar:</strong><br>
-                                        <?= htmlspecialchars(BASE_URL . '/' . $dish['image']) ?>
+                                        Archivo: <?= htmlspecialchars($imageName) ?>
                                     </div>
                                 <?php else: ?>
                                     <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 

@@ -25,14 +25,19 @@
                 </h6>
             </div>
             <div class="card-body text-center">
-                <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
+                <?php
+                // Extraer solo el nombre del archivo de la ruta completa
+                $imageName = basename($dish['image']);
+                $imageUrl = BASE_URL . '/image_server.php?file=' . urlencode($imageName);
+                ?>
+                <img src="<?= $imageUrl ?>" 
                      alt="<?= htmlspecialchars($dish['name']) ?>" 
-                     class="img-fluid rounded shadow-sm"
+                     class="img-fluid rounded shadow-sm dish-detail-image"
                      style="max-height: 300px; cursor: pointer;"
-                     onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
+                     onclick="showImageModal('<?= $imageUrl ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                 <div class="alert alert-warning" style="display: none;">
-                    <i class="bi bi-exclamation-triangle"></i> No se pudo cargar la imagen
+                    <i class="bi bi-exclamation-triangle"></i> No se pudo cargar la imagen: <?= htmlspecialchars($imageName) ?>
                 </div>
                 <div class="mt-2">
                     <small class="text-muted">Click para ver en tamaño completo</small>
