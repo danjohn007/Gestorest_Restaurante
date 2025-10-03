@@ -81,16 +81,21 @@
                         <tr>
                             <td class="text-center">
                                 <?php if ($dish['image']): ?>
+                                    <!-- Debug info temporal -->
+                                    <div class="small text-info mb-1">
+                                        <strong>Debug URL:</strong><br>
+                                        <?= htmlspecialchars(BASE_URL . '/' . $dish['image']) ?>
+                                    </div>
+                                    
                                     <img src="<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>" 
                                          alt="<?= htmlspecialchars($dish['name']) ?>" 
                                          class="img-thumbnail dish-image-preview"
                                          style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
                                          onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
-                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
-                                         style="width: 60px; height: 60px; display: none;">
-                                        <i class="bi bi-image text-muted"></i>
-                                        <small class="text-danger">Error al cargar</small>
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                    <div class="alert alert-warning py-1 px-2 small" style="display: none;">
+                                        <strong>Error al cargar:</strong><br>
+                                        <?= htmlspecialchars(BASE_URL . '/' . $dish['image']) ?>
                                     </div>
                                 <?php else: ?>
                                     <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
