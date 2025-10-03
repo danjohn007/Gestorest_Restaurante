@@ -29,7 +29,11 @@
                      alt="<?= htmlspecialchars($dish['name']) ?>" 
                      class="img-fluid rounded shadow-sm"
                      style="max-height: 300px; cursor: pointer;"
-                     onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')">
+                     onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="alert alert-warning" style="display: none;">
+                    <i class="bi bi-exclamation-triangle"></i> No se pudo cargar la imagen
+                </div>
                 <div class="mt-2">
                     <small class="text-muted">Click para ver en tamaño completo</small>
                 </div>

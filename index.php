@@ -3,7 +3,7 @@ session_start();
 
 // Define base path for the application
 define('BASE_PATH', __DIR__);
-define('BASE_URL', '/Nuvia/2');
+define('BASE_URL', '/administración');
 
 // Include configuration
 require_once BASE_PATH . '/config/config.php';

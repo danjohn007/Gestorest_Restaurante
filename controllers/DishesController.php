@@ -484,7 +484,7 @@ class DishesController extends BaseController {
      * Upload dish image
      */
     private function uploadDishImage($file) {
-        $uploadDir = 'public/uploads/dishes/';
+        $uploadDir = BASE_PATH . '/public/uploads/dishes/';
         
         // Create directory if it doesn't exist
         if (!is_dir($uploadDir)) {
@@ -501,16 +501,20 @@ class DishesController extends BaseController {
             throw new Exception('Error al mover el archivo subido');
         }
         
-        // Return relative path for database storage
-        return 'uploads/dishes/' . $filename;
+        // Return relative path for database storage (without leading slash)
+        return 'public/uploads/dishes/' . $filename;
     }
     
     /**
      * Delete image file
      */
     private function deleteImage($imagePath) {
-        if ($imagePath && file_exists('public/' . $imagePath)) {
-            unlink('public/' . $imagePath);
+        if ($imagePath) {
+            // Build full path
+            $fullPath = BASE_PATH . '/' . $imagePath;
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
         }
     }
 }

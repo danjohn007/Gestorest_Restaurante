@@ -85,7 +85,13 @@
                                          alt="<?= htmlspecialchars($dish['name']) ?>" 
                                          class="img-thumbnail dish-image-preview"
                                          style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
-                                         onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')">
+                                         onclick="showImageModal('<?= BASE_URL ?>/<?= htmlspecialchars($dish['image']) ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
+                                         style="width: 60px; height: 60px; display: none;">
+                                        <i class="bi bi-image text-muted"></i>
+                                        <small class="text-danger">Error al cargar</small>
+                                    </div>
                                 <?php else: ?>
                                     <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
                                          style="width: 60px; height: 60px;">

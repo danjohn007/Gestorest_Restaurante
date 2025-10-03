@@ -1,4 +1,14 @@
 RewriteEngine On
+
+# Allow direct access to image files
+RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|ico|svg)$ [NC]
+RewriteRule ^(.*)$ - [L]
+
+# Allow direct access to uploads directory
+RewriteCond %{REQUEST_URI} ^/administración/public/uploads/ [NC]
+RewriteRule ^(.*)$ - [L]
+
+# Default routing for other requests
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
