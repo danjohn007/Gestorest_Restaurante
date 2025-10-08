@@ -236,15 +236,46 @@
                              data-dish-description="<?= strtolower(htmlspecialchars($dish['description'] ?? '')) ?>">
                             <div class="card dish-card" data-dish-id="<?= $dish['id'] ?>">
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="card-title mb-0"><?= htmlspecialchars($dish['name']) ?></h6>
-                                        <strong class="text-success fs-5 fw-bold price-highlight-order">
-                                            $<?= number_format($dish['price'], 2) ?>
-                                        </strong>
+                                    <div class="d-flex align-items-start mb-2">
+                                        <!-- Dish Image -->
+                                        <div class="me-3 flex-shrink-0">
+                                            <?php if ($dish['image']): ?>
+                                                <?php
+                                                $imageName = basename($dish['image']);
+                                                $imageUrl = BASE_URL . '/image_server.php?file=' . urlencode($imageName);
+                                                ?>
+                                                <img src="<?= $imageUrl ?>" 
+                                                     alt="<?= htmlspecialchars($dish['name']) ?>" 
+                                                     class="dish-image-preview-order"
+                                                     style="width: 70px; height: 70px; object-fit: cover; cursor: pointer; border-radius: 8px;"
+                                                     onclick="showImageModal('<?= $imageUrl ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                <div class="bg-light d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 70px; height: 70px; display: none;">
+                                                    <i class="bi bi-image text-muted"></i>
+                                                </div>
+                                            <?php else: ?>
+                                                <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
+                                                     style="width: 70px; height: 70px;">
+                                                    <i class="bi bi-image text-muted"></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                        
+                                        <!-- Dish Info -->
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <h6 class="card-title mb-0"><?= htmlspecialchars($dish['name']) ?></h6>
+                                                <strong class="text-success fs-5 fw-bold price-highlight-order ms-2">
+                                                    $<?= number_format($dish['price'], 2) ?>
+                                                </strong>
+                                            </div>
+                                            <?php if ($dish['description']): ?>
+                                                <p class="text-muted small mb-2"><?= htmlspecialchars($dish['description']) ?></p>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
-                                    <?php if ($dish['description']): ?>
-                                        <p class="text-muted small mb-2"><?= htmlspecialchars($dish['description']) ?></p>
-                                    <?php endif; ?>
+                                    
                                     <div class="input-group input-group-sm">
                                         <button type="button" class="btn btn-outline-secondary btn-minus" data-dish-id="<?= $dish['id'] ?>">-</button>
                                         <input type="number" 
@@ -302,6 +333,21 @@
         </div>
     </div>
 </form>
+
+<!-- Modal para mostrar imagen en tamaño completo -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Imagen del Platillo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -667,6 +713,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar al cargar
     updateTotal();
 });
+
+// Function to show image modal
+function showImageModal(imageSrc, dishName) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('modalImage').alt = dishName;
+    document.getElementById('imageModalLabel').textContent = dishName;
+    
+    var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    imageModal.show();
+}
 </script>
 
 <style>
@@ -692,5 +748,43 @@ document.addEventListener('DOMContentLoaded', function() {
     min-width: 110px;
     white-space: normal;
     word-break: break-word;
+}
+
+/* Dish image styles for order creation */
+.dish-image-preview-order {
+    transition: transform 0.2s ease-in-out;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dish-image-preview-order:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.dish-placeholder {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px dashed #dee2e6;
+    transition: all 0.2s ease-in-out;
+}
+
+.dish-placeholder:hover {
+    border-color: #6c757d;
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+/* Modal image styles */
+.modal-body img {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    max-width: 100%;
+    height: auto;
+}
+
+/* Responsive styles for dish images */
+@media (max-width: 768px) {
+    .dish-image-preview-order {
+        width: 60px !important;
+        height: 60px !important;
+    }
 }
 </style>
