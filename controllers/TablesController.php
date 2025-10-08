@@ -738,5 +738,78 @@ class TablesController extends BaseController {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
     }
+    
+    public function duplicateSymbol() {
+        $this->requireRole([ROLE_ADMIN]);
+        
+        // Only accept POST requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            return;
+        }
+        
+        // Get JSON data from request body
+        $jsonData = file_get_contents('php://input');
+        $data = json_decode($jsonData, true);
+        
+        if (!$data || !isset($data['id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid data']);
+            return;
+        }
+        
+        try {
+            $newSymbolId = $this->symbolModel->duplicateSymbol($data['id']);
+            
+            if ($newSymbolId) {
+                $newSymbol = $this->symbolModel->find($newSymbolId);
+                echo json_encode(['success' => true, 'symbol' => $newSymbol]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => 'Failed to duplicate symbol']);
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+    
+    public function deleteSymbol() {
+        $this->requireRole([ROLE_ADMIN]);
+        
+        // Only accept POST requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            return;
+        }
+        
+        // Get JSON data from request body
+        $jsonData = file_get_contents('php://input');
+        $data = json_decode($jsonData, true);
+        
+        if (!$data || !isset($data['id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid data']);
+            return;
+        }
+        
+        try {
+            $success = $this->symbolModel->deleteSymbol($data['id']);
+            
+            if ($success) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'error' => 'Cannot delete this symbol. At least one of each type must remain.']);
+            }
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
 }
 ?>

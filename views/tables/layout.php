@@ -188,6 +188,71 @@
     border-color: #fd7e14;
     background-color: #ffe5d0;
 }
+
+.symbol-item.type-alberca {
+    border-color: #17a2b8;
+    background-color: #d1ecf1;
+}
+
+.symbol-item.type-terraza {
+    border-color: #6c757d;
+    background-color: #e2e3e5;
+}
+
+.symbol-item.type-patio {
+    border-color: #20c997;
+    background-color: #d4f4dd;
+}
+
+.symbol-item.type-puerta2 {
+    border-color: #8b4513;
+    background-color: #f5deb3;
+}
+
+.symbol-actions {
+    position: absolute;
+    bottom: -35px;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 1001;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.symbol-item:hover .symbol-actions {
+    opacity: 1;
+}
+
+.symbol-action-btn {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.symbol-action-btn.duplicate {
+    background-color: #0d6efd;
+}
+
+.symbol-action-btn.duplicate:hover {
+    background-color: #0b5ed7;
+}
+
+.symbol-action-btn.delete {
+    background-color: #dc3545;
+}
+
+.symbol-action-btn.delete:hover {
+    background-color: #bb2d3b;
+}
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -298,6 +363,7 @@
             <?php foreach ($symbols as $symbol): ?>
                 <div class="symbol-item type-<?= htmlspecialchars($symbol['type']) ?>" 
                      data-symbol-id="<?= $symbol['id'] ?>"
+                     data-symbol-type="<?= htmlspecialchars($symbol['type']) ?>"
                      data-type="symbol"
                      style="left: <?= $symbol['position_x'] ?>px; top: <?= $symbol['position_y'] ?>px;"
                      <?php if ($user['role'] === ROLE_ADMIN): ?>
@@ -309,6 +375,20 @@
                     <div class="symbol-label">
                         <?= htmlspecialchars($symbol['label']) ?>
                     </div>
+                    <?php if ($user['role'] === ROLE_ADMIN): ?>
+                    <div class="symbol-actions">
+                        <button class="symbol-action-btn duplicate" 
+                                data-symbol-id="<?= $symbol['id'] ?>"
+                                onclick="event.stopPropagation(); duplicateSymbol(<?= $symbol['id'] ?>);">
+                            <i class="bi bi-files"></i> Duplicar
+                        </button>
+                        <button class="symbol-action-btn delete" 
+                                data-symbol-id="<?= $symbol['id'] ?>"
+                                onclick="event.stopPropagation(); deleteSymbol(<?= $symbol['id'] ?>);">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </div>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
             <?php endif; ?>
@@ -497,4 +577,59 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Functions for duplicating and deleting symbols (available globally for onclick handlers)
+function duplicateSymbol(symbolId) {
+    if (!confirm('¿Desea duplicar este símbolo?')) {
+        return;
+    }
+    
+    fetch('<?= BASE_URL ?>/tables/duplicateSymbol', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: symbolId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.symbol) {
+            alert('Símbolo duplicado exitosamente. Recargando...');
+            window.location.reload();
+        } else {
+            alert('Error al duplicar símbolo: ' + (data.error || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al duplicar símbolo');
+    });
+}
+
+function deleteSymbol(symbolId) {
+    if (!confirm('¿Está seguro de que desea eliminar este símbolo? Esta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    fetch('<?= BASE_URL ?>/tables/deleteSymbol', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: symbolId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Símbolo eliminado exitosamente. Recargando...');
+            window.location.reload();
+        } else {
+            alert('Error al eliminar símbolo: ' + (data.error || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al eliminar símbolo');
+    });
+}
 </script>
