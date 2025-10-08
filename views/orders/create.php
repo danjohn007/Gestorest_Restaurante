@@ -248,12 +248,7 @@
                                                      alt="<?= htmlspecialchars($dish['name']) ?>" 
                                                      class="dish-image-preview-order"
                                                      style="width: 70px; height: 70px; object-fit: cover; cursor: pointer; border-radius: 8px;"
-                                                     onclick="showImageModal('<?= $imageUrl ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')"
-                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                <div class="bg-light d-flex align-items-center justify-content-center rounded" 
-                                                     style="width: 70px; height: 70px; display: none;">
-                                                    <i class="bi bi-image text-muted"></i>
-                                                </div>
+                                                     onclick="showImageModal('<?= $imageUrl ?>', '<?= htmlspecialchars($dish['name'], ENT_QUOTES) ?>')">
                                             <?php else: ?>
                                                 <div class="bg-light d-flex align-items-center justify-content-center rounded dish-placeholder" 
                                                      style="width: 70px; height: 70px;">
@@ -334,6 +329,21 @@
     </div>
 </form>
 
+<!-- Fixed bottom confirm button -->
+<div id="fixedConfirmBar" class="fixed-bottom bg-white shadow-lg border-top" style="display: none; z-index: 1000;">
+    <div class="container-fluid py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">Total del Pedido:</h5>
+                <h3 class="mb-0 text-primary fw-bold" id="fixedOrderTotal">$0.00</h3>
+            </div>
+            <button type="button" class="btn btn-success btn-lg" id="fixedConfirmBtn" onclick="document.getElementById('orderForm').submit();">
+                <i class="bi bi-check-circle-fill"></i> CONFIRMAR PEDIDO
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal para mostrar imagen en tamaño completo -->
 <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -379,33 +389,49 @@ document.addEventListener('DOMContentLoaded', function() {
         const allDishes = document.querySelectorAll('.dish-item');
         const allCategoryContainers = document.querySelectorAll('.category-dishes');
         const allCategoryHeaders = document.querySelectorAll('.category-header');
+        
+        // Check if there's an active search query
+        const searchQuery = dishSearch ? dishSearch.value.trim().toLowerCase() : '';
+        
         if (category === 'all') {
-            allDishes.forEach(d => d.style.display = 'block');
-            allCategoryContainers.forEach(c => c.style.display = 'flex');
-            allCategoryHeaders.forEach(h => h.style.display = 'block');
+            if (searchQuery === '') {
+                allDishes.forEach(d => d.style.display = 'block');
+                allCategoryContainers.forEach(c => c.style.display = 'flex');
+                allCategoryHeaders.forEach(h => h.style.display = 'block');
+            } else {
+                // Re-apply search filter with 'all' category
+                filterDishes(searchQuery);
+            }
             return;
         }
-        allDishes.forEach(dish => {
-            if (dish.dataset.dishCategory === category) {
-                dish.style.display = 'block';
-            } else {
-                dish.style.display = 'none';
-            }
-        });
-        allCategoryContainers.forEach(container => {
-            if (container.dataset.category.toLowerCase() === category) {
-                container.style.display = 'flex';
-            } else {
-                container.style.display = 'none';
-            }
-        });
-        allCategoryHeaders.forEach(header => {
-            if (header.dataset.category.toLowerCase() === category) {
-                header.style.display = 'block';
-            } else {
-                header.style.display = 'none';
-            }
-        });
+        
+        if (searchQuery === '') {
+            // No search, just filter by category
+            allDishes.forEach(dish => {
+                if (dish.dataset.dishCategory === category) {
+                    dish.style.display = 'block';
+                } else {
+                    dish.style.display = 'none';
+                }
+            });
+            allCategoryContainers.forEach(container => {
+                if (container.dataset.category.toLowerCase() === category) {
+                    container.style.display = 'flex';
+                } else {
+                    container.style.display = 'none';
+                }
+            });
+            allCategoryHeaders.forEach(header => {
+                if (header.dataset.category.toLowerCase() === category) {
+                    header.style.display = 'block';
+                } else {
+                    header.style.display = 'none';
+                }
+            });
+        } else {
+            // Re-apply search filter with selected category
+            filterDishes(searchQuery);
+        }
     }
     const dishSearch = document.getElementById('dish_search');
     const clearDishSearchBtn = document.getElementById('clear_dish_search');
@@ -460,17 +486,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const categoryContainers = document.querySelectorAll('.category-dishes');
         let hasVisibleDishes = false;
         
+        // Get currently selected category
+        const activeCategory = document.querySelector('.btn-category.active');
+        const selectedCategory = activeCategory ? activeCategory.dataset.category : 'all';
+        
         if (query === '') {
-            // Show all dishes and categories
-            dishes.forEach(dish => dish.style.display = 'block');
-            categories.forEach(cat => cat.style.display = 'block');
-            categoryContainers.forEach(container => container.style.display = 'flex');
+            // If no search query, apply category filter
+            if (selectedCategory === 'all') {
+                dishes.forEach(dish => dish.style.display = 'block');
+                categories.forEach(cat => cat.style.display = 'block');
+                categoryContainers.forEach(container => container.style.display = 'flex');
+            } else {
+                // Apply category filter
+                filterByCategory(selectedCategory);
+            }
             dishesContainer.style.display = 'block';
             noResults.style.display = 'none';
             return;
         }
         
         // Filter dishes by name, category, or description
+        // If a specific category is selected, only search within that category
         dishes.forEach(dish => {
             const name = dish.dataset.dishName || '';
             const category = dish.dataset.dishCategory || '';
@@ -480,7 +516,10 @@ document.addEventListener('DOMContentLoaded', function() {
                           category.includes(query) || 
                           description.includes(query);
             
-            if (matches) {
+            // Check if dish matches search AND is in selected category (if not 'all')
+            const inSelectedCategory = (selectedCategory === 'all' || category === selectedCategory);
+            
+            if (matches && inSelectedCategory) {
                 dish.style.display = 'block';
                 hasVisibleDishes = true;
             } else {
@@ -681,6 +720,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         totalElement.textContent = '$' + total.toFixed(2);
+        
+        // Update fixed bottom bar
+        const fixedOrderTotal = document.getElementById('fixedOrderTotal');
+        const fixedConfirmBar = document.getElementById('fixedConfirmBar');
+        if (fixedOrderTotal) {
+            fixedOrderTotal.textContent = '$' + total.toFixed(2);
+        }
+        // Show/hide fixed bar based on total
+        if (fixedConfirmBar) {
+            if (total > 0) {
+                fixedConfirmBar.style.display = 'block';
+            } else {
+                fixedConfirmBar.style.display = 'none';
+            }
+        }
+        
         updateAddedDishesList(addedDishes);
     }
     
