@@ -253,6 +253,81 @@
 .symbol-action-btn.delete:hover {
     background-color: #bb2d3b;
 }
+
+.zone-area {
+    position: absolute;
+    border: 2px dashed rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    cursor: move;
+    transition: opacity 0.2s, box-shadow 0.2s;
+    z-index: 1;
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 10px;
+}
+
+.zone-area:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-style: solid;
+}
+
+.zone-area.dragging {
+    opacity: 0.6;
+    z-index: 998;
+}
+
+.zone-label {
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+    user-select: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.zone-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, 0.3) 50%);
+    border-radius: 0 0 6px 0;
+}
+
+.zone-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    gap: 5px;
+}
+
+.zone-area:hover .zone-actions {
+    opacity: 1;
+}
+
+.zone-action-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.6);
+    transition: background-color 0.2s;
+}
+
+.zone-action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -332,6 +407,46 @@
     
     <div class="card-body p-0">
         <div id="layoutContainer" style="width: <?= isset($layoutSettings['width']) ? $layoutSettings['width'] : 1200 ?>px; height: <?= isset($layoutSettings['height']) ? $layoutSettings['height'] : 800 ?>px;">
+            <?php if (!empty($zones)): ?>
+            <?php foreach ($zones as $zone): ?>
+                <?php
+                // Convert hex color to rgba with transparency
+                $color = $zone['color'];
+                if (preg_match('/^#([a-fA-F0-9]{6})$/', $color, $matches)) {
+                    $hex = $matches[1];
+                    $r = hexdec(substr($hex, 0, 2));
+                    $g = hexdec(substr($hex, 2, 2));
+                    $b = hexdec(substr($hex, 4, 2));
+                    $bgColor = "rgba($r, $g, $b, 0.15)";
+                    $borderColor = "rgba($r, $g, $b, 0.5)";
+                } else {
+                    $bgColor = "rgba(0, 123, 255, 0.15)";
+                    $borderColor = "rgba(0, 123, 255, 0.5)";
+                }
+                ?>
+                <div class="zone-area" 
+                     data-zone-id="<?= $zone['id'] ?>"
+                     data-zone-name="<?= htmlspecialchars($zone['name']) ?>"
+                     data-type="zone"
+                     style="left: <?= $zone['position_x'] ?>px; 
+                            top: <?= $zone['position_y'] ?>px; 
+                            width: <?= $zone['width'] ?>px; 
+                            height: <?= $zone['height'] ?>px;
+                            background-color: <?= $bgColor ?>;
+                            border-color: <?= $borderColor ?>;"
+                     <?php if ($user['role'] === ROLE_ADMIN): ?>
+                     draggable="true"
+                     <?php endif; ?>>
+                    <div class="zone-label" style="color: <?= $zone['color'] ?>;">
+                        <?= htmlspecialchars($zone['name']) ?>
+                    </div>
+                    <?php if ($user['role'] === ROLE_ADMIN): ?>
+                    <div class="zone-resize-handle" data-zone-id="<?= $zone['id'] ?>"></div>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
+            
             <?php foreach ($tables as $table): ?>
                 <?php
                 $posX = $table['position_x'] ?? 50 + (($table['id'] - 1) * 100) % 1100;
@@ -401,6 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const layoutContainer = document.getElementById('layoutContainer');
     const tableItems = document.querySelectorAll('.table-item');
     const symbolItems = document.querySelectorAll('.symbol-item');
+    const zoneItems = document.querySelectorAll('.zone-area');
     const saveLayoutBtn = document.getElementById('saveLayout');
     const resetPositionsBtn = document.getElementById('resetPositions');
     const applyDimensionsBtn = document.getElementById('applyDimensions');
@@ -412,6 +528,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let draggedElement = null;
     let offsetX = 0;
     let offsetY = 0;
+    let resizingZone = null;
+    let resizeStartX = 0;
+    let resizeStartY = 0;
+    let resizeStartWidth = 0;
+    let resizeStartHeight = 0;
     
     if (!isAdmin) {
         // For non-admin users, make tables clickable to create orders
@@ -429,8 +550,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Drag and drop functionality (admin only)
-    // Setup drag for both tables and symbols
-    const draggableItems = [...tableItems, ...symbolItems];
+    // Setup drag for tables, symbols, and zones
+    const draggableItems = [...tableItems, ...symbolItems, ...zoneItems];
     draggableItems.forEach(item => {
         item.addEventListener('dragstart', function(e) {
             draggedElement = this;
@@ -483,11 +604,68 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Zone resize functionality (admin only)
+    if (isAdmin) {
+        const resizeHandles = document.querySelectorAll('.zone-resize-handle');
+        
+        resizeHandles.forEach(handle => {
+            handle.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const zoneId = this.dataset.zoneId;
+                resizingZone = document.querySelector(`.zone-area[data-zone-id="${zoneId}"]`);
+                
+                if (resizingZone) {
+                    resizeStartX = e.clientX;
+                    resizeStartY = e.clientY;
+                    resizeStartWidth = resizingZone.offsetWidth;
+                    resizeStartHeight = resizingZone.offsetHeight;
+                    
+                    // Prevent dragging while resizing
+                    resizingZone.draggable = false;
+                }
+            });
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (resizingZone) {
+                const deltaX = e.clientX - resizeStartX;
+                const deltaY = e.clientY - resizeStartY;
+                
+                let newWidth = resizeStartWidth + deltaX;
+                let newHeight = resizeStartHeight + deltaY;
+                
+                // Minimum size constraints
+                newWidth = Math.max(150, newWidth);
+                newHeight = Math.max(100, newHeight);
+                
+                // Maximum size constraints (don't exceed container)
+                const zoneLeft = parseInt(resizingZone.style.left);
+                const zoneTop = parseInt(resizingZone.style.top);
+                newWidth = Math.min(newWidth, layoutContainer.offsetWidth - zoneLeft);
+                newHeight = Math.min(newHeight, layoutContainer.offsetHeight - zoneTop);
+                
+                resizingZone.style.width = newWidth + 'px';
+                resizingZone.style.height = newHeight + 'px';
+            }
+        });
+        
+        document.addEventListener('mouseup', function(e) {
+            if (resizingZone) {
+                // Re-enable dragging
+                resizingZone.draggable = true;
+                resizingZone = null;
+            }
+        });
+    }
+    
     // Save layout
     if (saveLayoutBtn) {
         saveLayoutBtn.addEventListener('click', function() {
             const positions = [];
             const symbols = [];
+            const zones = [];
             
             tableItems.forEach(item => {
                 positions.push({
@@ -505,9 +683,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
             
+            zoneItems.forEach(item => {
+                zones.push({
+                    id: parseInt(item.dataset.zoneId),
+                    x: parseInt(item.style.left),
+                    y: parseInt(item.style.top),
+                    width: parseInt(item.style.width),
+                    height: parseInt(item.style.height)
+                });
+            });
+            
             const layoutData = {
                 positions: positions,
                 symbols: symbols,
+                zones: zones,
                 width: layoutContainer.offsetWidth,
                 height: layoutContainer.offsetHeight
             };
