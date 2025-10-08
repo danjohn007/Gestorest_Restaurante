@@ -676,6 +676,7 @@ class OrdersController extends BaseController {
     public function expiredOrders() {
         $user = $this->getCurrentUser();
         $filters = [];
+        $waiter = null;
         
         // Filter by waiter for waiter users only
         if ($user['role'] === ROLE_WAITER) {
@@ -695,7 +696,8 @@ class OrdersController extends BaseController {
         
         $this->view('orders/expired', [
             'orders' => $orders,
-            'user' => $user
+            'user' => $user,
+            'waiter' => $waiter
         ]);
     }
     
