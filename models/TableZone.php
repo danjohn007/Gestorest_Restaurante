@@ -38,5 +38,26 @@ class TableZone extends BaseModel {
         
         return $stmt->fetchAll();
     }
+    
+    public function getZonesForLayout() {
+        $query = "SELECT id, name, color, position_x, position_y, width, height 
+                  FROM {$this->table} 
+                  WHERE active = 1 
+                  ORDER BY name ASC";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+    
+    public function updateZoneArea($id, $x, $y, $width, $height) {
+        return $this->update($id, [
+            'position_x' => (int)$x,
+            'position_y' => (int)$y,
+            'width' => (int)$width,
+            'height' => (int)$height
+        ]);
+    }
 }
 ?>

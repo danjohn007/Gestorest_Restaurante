@@ -665,6 +665,9 @@ class TablesController extends BaseController {
         // Get layout symbols
         $symbols = $this->symbolModel->getAllSymbols();
         
+        // Get zones for layout visualization
+        $zones = $this->tableZoneModel->getZonesForLayout();
+        
         // Get layout settings (from settings table or default)
         $settingsModel = new SystemSettings();
         $layoutSettings = [
@@ -675,6 +678,7 @@ class TablesController extends BaseController {
         $this->view('tables/layout', [
             'tables' => $tables,
             'symbols' => $symbols,
+            'zones' => $zones,
             'layoutSettings' => $layoutSettings,
             'user' => $user
         ]);
@@ -721,6 +725,19 @@ class TablesController extends BaseController {
                     $y = $symbol['y'];
                     
                     $this->symbolModel->updatePosition($symbolId, $x, $y);
+                }
+            }
+            
+            // Update zone areas if provided
+            if (isset($data['zones'])) {
+                foreach ($data['zones'] as $zone) {
+                    $zoneId = $zone['id'];
+                    $x = $zone['x'];
+                    $y = $zone['y'];
+                    $width = $zone['width'];
+                    $height = $zone['height'];
+                    
+                    $this->tableZoneModel->updateZoneArea($zoneId, $x, $y, $width, $height);
                 }
             }
             
