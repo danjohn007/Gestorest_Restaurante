@@ -135,7 +135,7 @@
                 </thead>
                 <tbody>
                     <?php foreach ($orders as $order): ?>
-                    <tr class="table-danger">
+                    <tr>
                         <td>
                             <strong>#<?= $order['id'] ?></strong>
                         </td>
@@ -192,7 +192,7 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 
-                                <?php if ($user['role'] !== ROLE_WAITER || $order['waiter_id'] == $waiter['id']): ?>
+                                <?php if ($user['role'] !== ROLE_WAITER || ($waiter && $order['waiter_id'] == $waiter['id'])): ?>
                                 <a href="<?= BASE_URL ?>/orders/edit/<?= $order['id'] ?>" 
                                    class="btn btn-outline-warning" title="Editar">
                                     <i class="bi bi-pencil"></i>
@@ -242,10 +242,6 @@ function getStatusLabel($status) {
 ?>
 
 <style>
-.table-danger {
-    background-color: rgba(248, 215, 218, 0.3) !important;
-}
-
 .card {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
