@@ -63,6 +63,14 @@
                     </li>
                     <?php endif; ?>
                     
+                    <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_WAITER, ROLE_CASHIER])): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= BASE_URL ?>/tables/layout">
+                            <i class="bi bi-diagram-3"></i> Layout de Mesas
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    
                     <li class="nav-item">
                         <a class="nav-link" href="<?= BASE_URL ?>/reservations">
                             <i class="bi bi-calendar-check"></i> Reservaciones
