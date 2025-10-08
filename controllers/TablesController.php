@@ -651,5 +651,75 @@ class TablesController extends BaseController {
             ]);
         }
     }
+    
+    public function layout() {
+        $this->requireRole([ROLE_ADMIN, ROLE_WAITER]);
+        
+        $user = $this->getCurrentUser();
+        
+        // Get all active tables
+        $tables = $this->tableModel->getTablesWithWaiters();
+        
+        // Get layout settings (from settings table or default)
+        $settingsModel = new SystemSettings();
+        $layoutSettings = [
+            'width' => $settingsModel->get('layout_width', 1200),
+            'height' => $settingsModel->get('layout_height', 800)
+        ];
+        
+        $this->view('tables/layout', [
+            'tables' => $tables,
+            'layoutSettings' => $layoutSettings,
+            'user' => $user
+        ]);
+    }
+    
+    public function saveLayout() {
+        $this->requireRole([ROLE_ADMIN]);
+        
+        // Only accept POST requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            return;
+        }
+        
+        // Get JSON data from request body
+        $jsonData = file_get_contents('php://input');
+        $data = json_decode($jsonData, true);
+        
+        if (!$data || !isset($data['positions'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid data']);
+            return;
+        }
+        
+        try {
+            // Update each table position
+            foreach ($data['positions'] as $position) {
+                $tableId = $position['id'];
+                $x = $position['x'];
+                $y = $position['y'];
+                
+                $this->tableModel->update($tableId, [
+                    'position_x' => $x,
+                    'position_y' => $y
+                ]);
+            }
+            
+            // Save layout dimensions to settings
+            if (isset($data['width']) && isset($data['height'])) {
+                $settingsModel = new SystemSettings();
+                $settingsModel->set('layout_width', $data['width']);
+                $settingsModel->set('layout_height', $data['height']);
+            }
+            
+            echo json_encode(['success' => true]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
 }
 ?>

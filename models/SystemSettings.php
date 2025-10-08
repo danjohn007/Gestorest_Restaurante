@@ -132,5 +132,14 @@ class SystemSettings extends BaseModel {
             return false;
         }
     }
+    
+    // Alias methods for convenience
+    public function get($key, $default = null) {
+        return $this->getSetting($key, $default);
+    }
+    
+    public function set($key, $value, $description = null) {
+        return $this->setSetting($key, $value, $description);
+    }
 }
 ?>
