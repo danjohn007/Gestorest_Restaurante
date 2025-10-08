@@ -91,7 +91,7 @@
                             <option value="">Seleccionar zona...</option>
                             <?php foreach ($zones as $zone): ?>
                                 <option value="<?= htmlspecialchars($zone['name']) ?>" 
-                                        <?= ($old['zone'] ?? 'Salón') == $zone['name'] ? 'selected' : '' ?>>
+                                        <?= ($old['zone'] ?? '') == $zone['name'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($zone['name']) ?>
                                     <?php if (!empty($zone['description'])): ?>
                                         - <?= htmlspecialchars($zone['description']) ?>

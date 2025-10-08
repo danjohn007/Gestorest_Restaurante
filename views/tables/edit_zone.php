@@ -1,7 +1,7 @@
-<?php $title = 'Crear Zona'; ?>
+<?php $title = 'Editar Zona'; ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-plus-square"></i> Crear Zona</h1>
+    <h1><i class="bi bi-pencil-square"></i> Editar Zona</h1>
     <a href="<?= BASE_URL ?>/tables/zones" class="btn btn-secondary">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
@@ -30,7 +30,7 @@
                             class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" 
                             id="name" 
                             name="name" 
-                            value="<?= htmlspecialchars($old['name'] ?? '') ?>"
+                            value="<?= htmlspecialchars($old['name'] ?? $zone['name']) ?>"
                             placeholder="Ej: Salón, Terraza, Alberca..."
                             required
                             maxlength="50"
@@ -55,7 +55,7 @@
                             name="description" 
                             rows="3"
                             placeholder="Descripción opcional de la zona..."
-                        ><?= htmlspecialchars($old['description'] ?? '') ?></textarea>
+                        ><?= htmlspecialchars($old['description'] ?? $zone['description']) ?></textarea>
                         <?php if (isset($errors['description'])): ?>
                         <div class="invalid-feedback">
                             <?= htmlspecialchars($errors['description']) ?>
@@ -76,14 +76,14 @@
                                 class="form-control form-control-color <?= isset($errors['color']) ? 'is-invalid' : '' ?>" 
                                 id="color" 
                                 name="color" 
-                                value="<?= htmlspecialchars($old['color'] ?? '#007bff') ?>"
+                                value="<?= htmlspecialchars($old['color'] ?? $zone['color']) ?>"
                                 style="max-width: 60px;"
                             >
                             <input 
                                 type="text" 
                                 class="form-control" 
                                 id="colorHex" 
-                                value="<?= htmlspecialchars($old['color'] ?? '#007bff') ?>"
+                                value="<?= htmlspecialchars($old['color'] ?? $zone['color']) ?>"
                                 readonly
                             >
                         </div>
@@ -108,7 +108,7 @@
                                     class="form-control <?= isset($errors['width']) ? 'is-invalid' : '' ?>" 
                                     id="width" 
                                     name="width" 
-                                    value="<?= htmlspecialchars($old['width'] ?? '400') ?>"
+                                    value="<?= htmlspecialchars($old['width'] ?? $zone['width'] ?? '400') ?>"
                                     min="150"
                                     max="1000"
                                     step="10"
@@ -133,7 +133,7 @@
                                     class="form-control <?= isset($errors['height']) ? 'is-invalid' : '' ?>" 
                                     id="height" 
                                     name="height" 
-                                    value="<?= htmlspecialchars($old['height'] ?? '300') ?>"
+                                    value="<?= htmlspecialchars($old['height'] ?? $zone['height'] ?? '300') ?>"
                                     min="100"
                                     max="800"
                                     step="10"
@@ -155,7 +155,7 @@
                             <i class="bi bi-x-circle"></i> Cancelar
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> Crear Zona
+                            <i class="bi bi-check-circle"></i> Actualizar Zona
                         </button>
                     </div>
                 </form>

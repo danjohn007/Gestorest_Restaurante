@@ -242,7 +242,7 @@ class TablesController extends BaseController {
         $tableData = [
             'number' => trim($_POST['number']),
             'capacity' => (int)$_POST['capacity'],
-            'zone' => $_POST['zone'] ?? 'Salón',
+            'zone' => $_POST['zone'] ?? '',
             'status' => TABLE_AVAILABLE,
             'waiter_id' => !empty($_POST['waiter_id']) ? (int)$_POST['waiter_id'] : null
         ];
@@ -511,7 +511,9 @@ class TablesController extends BaseController {
                 $data = [
                     'name' => trim($_POST['name']),
                     'description' => trim($_POST['description'] ?? ''),
-                    'color' => $_POST['color'] ?? '#007bff'
+                    'color' => $_POST['color'] ?? '#007bff',
+                    'width' => isset($_POST['width']) ? (int)$_POST['width'] : 400,
+                    'height' => isset($_POST['height']) ? (int)$_POST['height'] : 300
                 ];
                 
                 if ($this->tableZoneModel->create($data)) {
@@ -549,7 +551,9 @@ class TablesController extends BaseController {
                 $data = [
                     'name' => trim($_POST['name']),
                     'description' => trim($_POST['description'] ?? ''),
-                    'color' => $_POST['color'] ?? '#007bff'
+                    'color' => $_POST['color'] ?? '#007bff',
+                    'width' => isset($_POST['width']) ? (int)$_POST['width'] : ($zone['width'] ?? 400),
+                    'height' => isset($_POST['height']) ? (int)$_POST['height'] : ($zone['height'] ?? 300)
                 ];
                 
                 if ($this->tableZoneModel->update($id, $data)) {
@@ -613,6 +617,26 @@ class TablesController extends BaseController {
         // Color validation
         if (!empty($data['color']) && !preg_match('/^#[a-fA-F0-9]{6}$/', $data['color'])) {
             $errors['color'] = 'El color debe ser un código hexadecimal válido';
+        }
+        
+        // Width validation
+        if (isset($data['width'])) {
+            $width = (int)$data['width'];
+            if ($width < 150) {
+                $errors['width'] = 'El ancho debe ser al menos 150 píxeles';
+            } elseif ($width > 1000) {
+                $errors['width'] = 'El ancho no puede ser mayor a 1000 píxeles';
+            }
+        }
+        
+        // Height validation
+        if (isset($data['height'])) {
+            $height = (int)$data['height'];
+            if ($height < 100) {
+                $errors['height'] = 'El alto debe ser al menos 100 píxeles';
+            } elseif ($height > 800) {
+                $errors['height'] = 'El alto no puede ser mayor a 800 píxeles';
+            }
         }
         
         return $errors;
