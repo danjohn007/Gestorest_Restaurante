@@ -9,6 +9,8 @@ cd /ruta/al/proyecto
 php apply_zone_areas_migration.php
 ```
 
+> **Nota Importante:** Las zonas ya NO se crean automáticamente. Debes crear manualmente las zonas que necesites desde la interfaz.
+
 Salida esperada:
 ```
 === Aplicando migración de áreas de zona ===
@@ -17,12 +19,9 @@ Ejecutando: ALTER TABLE table_zones...
 ✓ Migración aplicada exitosamente
 ✓ Las zonas ahora tienen campos de posición y tamaño para el layout
 
-=== Verificando zonas configuradas ===
-- Salón: posición (100, 100), tamaño 450x300, color #007bff
-- Terraza: posición (600, 100), tamaño 450x300, color #28a745
-- Alberca: posición (100, 450), tamaño 450x250, color #17a2b8
-- Spa: posición (600, 450), tamaño 450x250, color #6f42c1
-- Room Service: posición (300, 300), tamaño 400x200, color #fd7e14
+=== Nota ===
+Las zonas deben crearse manualmente desde la interfaz.
+Ve a: Gestión de Mesas → Zonas → Nueva Zona
 ```
 
 ### Paso 2: Acceder al Layout (30 segundos)
@@ -97,14 +96,17 @@ php -r "require 'config/database.php'; echo 'Conexión OK';"
 
 ## 🎨 Personalización Rápida
 
-### Cambiar Color de una Zona
+### Cambiar Color o Tamaño de una Zona
 
 1. Ir a: **Gestión de Mesas** → **Zonas**
 2. Hacer clic en **"Editar"** de la zona deseada
-3. Seleccionar nuevo color (selector de color)
+3. Modificar según necesidad:
+   - Color: Selector de color
+   - Ancho: Ajustar píxeles (150-1000px)
+   - Alto: Ajustar píxeles (100-800px)
 4. Guardar
 5. Refrescar layout (F5)
-6. ✅ La zona ahora muestra el nuevo color
+6. ✅ La zona ahora muestra los cambios aplicados
 
 ### Crear Nueva Zona
 
@@ -114,10 +116,12 @@ php -r "require 'config/database.php'; echo 'Conexión OK';"
    - Nombre: ej. "VIP"
    - Color: ej. #FFD700 (dorado)
    - Descripción: ej. "Área VIP"
+   - **Ancho (px)**: ej. 400 (150-1000px)
+   - **Alto (px)**: ej. 300 (100-800px)
 4. Guardar
 5. Ir al Layout
-6. ✅ Nueva zona aparece con posición por defecto (100, 100)
-7. Mover y redimensionar según necesidad
+6. ✅ Nueva zona aparece con las dimensiones especificadas en posición por defecto (100, 100)
+7. Mover y redimensionar en layout si es necesario
 8. Guardar layout
 
 ## 📊 Ejemplo Práctico: Configuración de Restaurant
