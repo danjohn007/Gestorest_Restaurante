@@ -54,6 +54,36 @@
     color: #6c757d;
 }
 
+.table-item .table-actions {
+    position: absolute;
+    bottom: -30px;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 1001;
+}
+
+.table-item:hover .table-actions {
+    opacity: 1;
+}
+
+.table-item .new-order-link {
+    display: block;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    background-color: #198754;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.table-item .new-order-link:hover {
+    background-color: #157347;
+    color: white;
+}
+
 .table-item.status-disponible {
     border-color: #198754;
     background-color: #d1e7dd;
@@ -93,6 +123,70 @@
 
 .dimension-input {
     max-width: 120px;
+}
+
+.symbol-item {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-color: #f8f9fa;
+    border: 2px solid #6c757d;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: move;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s, transform 0.2s;
+    user-select: none;
+}
+
+.symbol-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: scale(1.05);
+    z-index: 1000;
+}
+
+.symbol-item.dragging {
+    opacity: 0.5;
+    z-index: 999;
+}
+
+.symbol-item .symbol-icon {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.symbol-item .symbol-label {
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.symbol-item.type-puerta {
+    border-color: #8b4513;
+    background-color: #f5deb3;
+}
+
+.symbol-item.type-entrada {
+    border-color: #28a745;
+    background-color: #d4edda;
+}
+
+.symbol-item.type-barra {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.symbol-item.type-caja {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+}
+
+.symbol-item.type-cocina {
+    border-color: #fd7e14;
+    background-color: #ffe5d0;
 }
 </style>
 
@@ -181,6 +275,7 @@
                 <div class="table-item status-<?= htmlspecialchars($table['status']) ?>" 
                      data-table-id="<?= $table['id'] ?>"
                      data-table-number="<?= $table['number'] ?>"
+                     data-type="table"
                      style="left: <?= $posX ?>px; top: <?= $posY ?>px;"
                      <?php if ($user['role'] === ROLE_ADMIN): ?>
                      draggable="true"
@@ -189,8 +284,34 @@
                     <div class="table-capacity">
                         <i class="bi bi-people"></i> <?= $table['capacity'] ?>
                     </div>
+                    <div class="table-actions">
+                        <a href="<?= BASE_URL ?>/orders/create?table_id=<?= $table['id'] ?>" 
+                           class="new-order-link"
+                           onclick="event.stopPropagation();">
+                            <i class="bi bi-plus-circle"></i> Nuevo Pedido
+                        </a>
+                    </div>
                 </div>
             <?php endforeach; ?>
+            
+            <?php if (!empty($symbols)): ?>
+            <?php foreach ($symbols as $symbol): ?>
+                <div class="symbol-item type-<?= htmlspecialchars($symbol['type']) ?>" 
+                     data-symbol-id="<?= $symbol['id'] ?>"
+                     data-type="symbol"
+                     style="left: <?= $symbol['position_x'] ?>px; top: <?= $symbol['position_y'] ?>px;"
+                     <?php if ($user['role'] === ROLE_ADMIN): ?>
+                     draggable="true"
+                     <?php endif; ?>>
+                    <div class="symbol-icon">
+                        <i class="bi <?= htmlspecialchars($symbol['icon'] ?? 'bi-circle') ?>"></i>
+                    </div>
+                    <div class="symbol-label">
+                        <?= htmlspecialchars($symbol['label']) ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -199,6 +320,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const layoutContainer = document.getElementById('layoutContainer');
     const tableItems = document.querySelectorAll('.table-item');
+    const symbolItems = document.querySelectorAll('.symbol-item');
     const saveLayoutBtn = document.getElementById('saveLayout');
     const resetPositionsBtn = document.getElementById('resetPositions');
     const applyDimensionsBtn = document.getElementById('applyDimensions');
@@ -227,7 +349,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Drag and drop functionality (admin only)
-    tableItems.forEach(item => {
+    // Setup drag for both tables and symbols
+    const draggableItems = [...tableItems, ...symbolItems];
+    draggableItems.forEach(item => {
         item.addEventListener('dragstart', function(e) {
             draggedElement = this;
             this.classList.add('dragging');
@@ -283,6 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (saveLayoutBtn) {
         saveLayoutBtn.addEventListener('click', function() {
             const positions = [];
+            const symbols = [];
             
             tableItems.forEach(item => {
                 positions.push({
@@ -292,8 +417,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
             
+            symbolItems.forEach(item => {
+                symbols.push({
+                    id: parseInt(item.dataset.symbolId),
+                    x: parseInt(item.style.left),
+                    y: parseInt(item.style.top)
+                });
+            });
+            
             const layoutData = {
                 positions: positions,
+                symbols: symbols,
                 width: layoutContainer.offsetWidth,
                 height: layoutContainer.offsetHeight
             };

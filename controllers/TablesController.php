@@ -3,12 +3,14 @@ class TablesController extends BaseController {
     private $tableModel;
     private $waiterModel;
     private $tableZoneModel;
+    private $symbolModel;
     
     public function __construct() {
         parent::__construct();
         $this->tableModel = new Table();
         $this->waiterModel = new Waiter();
         $this->tableZoneModel = new TableZone();
+        $this->symbolModel = new LayoutSymbol();
     }
     
     public function index() {
@@ -653,12 +655,15 @@ class TablesController extends BaseController {
     }
     
     public function layout() {
-        $this->requireRole([ROLE_ADMIN, ROLE_WAITER]);
+        $this->requireRole([ROLE_ADMIN, ROLE_WAITER, ROLE_CASHIER]);
         
         $user = $this->getCurrentUser();
         
         // Get all active tables
         $tables = $this->tableModel->getTablesWithWaiters();
+        
+        // Get layout symbols
+        $symbols = $this->symbolModel->getAllSymbols();
         
         // Get layout settings (from settings table or default)
         $settingsModel = new SystemSettings();
@@ -669,6 +674,7 @@ class TablesController extends BaseController {
         
         $this->view('tables/layout', [
             'tables' => $tables,
+            'symbols' => $symbols,
             'layoutSettings' => $layoutSettings,
             'user' => $user
         ]);
@@ -705,6 +711,17 @@ class TablesController extends BaseController {
                     'position_x' => $x,
                     'position_y' => $y
                 ]);
+            }
+            
+            // Update symbol positions if provided
+            if (isset($data['symbols'])) {
+                foreach ($data['symbols'] as $symbol) {
+                    $symbolId = $symbol['id'];
+                    $x = $symbol['x'];
+                    $y = $symbol['y'];
+                    
+                    $this->symbolModel->updatePosition($symbolId, $x, $y);
+                }
             }
             
             // Save layout dimensions to settings

@@ -106,11 +106,18 @@ class OrdersController extends BaseController {
                 $waiters = $this->waiterModel->getWaitersWithUsers();
             }
             
+            // Get table_id from URL parameter if present
+            $old = [];
+            if (isset($_GET['table_id']) && !empty($_GET['table_id'])) {
+                $old['table_id'] = (int)$_GET['table_id'];
+            }
+            
             $this->view('orders/create', [
                 'tables' => $tables,
                 'dishes' => $dishes,
                 'waiters' => $waiters,
-                'user' => $user
+                'user' => $user,
+                'old' => $old
             ]);
         }
     }
