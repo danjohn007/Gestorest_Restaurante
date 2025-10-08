@@ -4,6 +4,9 @@
     <h1><i class="bi bi-grid-3x3-gap"></i> <?= ($user['role'] === ROLE_WAITER) ? 'Consultar Mesas' : 'Gestión de Mesas' ?></h1>
     <?php if ($user['role'] === ROLE_ADMIN): ?>
     <div>
+        <a href="<?= BASE_URL ?>/tables/layout" class="btn btn-outline-info me-2">
+            <i class="bi bi-diagram-3"></i> LAYOUT
+        </a>
         <a href="<?= BASE_URL ?>/tables/zones" class="btn btn-outline-secondary me-2">
             <i class="bi bi-geo-alt"></i> Gestionar Zonas
         </a>
@@ -12,6 +15,12 @@
         </a>
         <a href="<?= BASE_URL ?>/tables/create" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nueva Mesa
+        </a>
+    </div>
+    <?php elseif ($user['role'] === ROLE_WAITER): ?>
+    <div>
+        <a href="<?= BASE_URL ?>/tables/layout" class="btn btn-outline-info">
+            <i class="bi bi-diagram-3"></i> Ver Layout
         </a>
     </div>
     <?php endif; ?>
