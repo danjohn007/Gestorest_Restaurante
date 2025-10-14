@@ -382,25 +382,40 @@ class TicketsController extends BaseController {
         if (!in_array($_POST['payment_method'] ?? '', $validMethods)) {
             $errors['payment_method'] = 'Método de pago inválido';
         }
-        
+
+        // Check if this is an AJAX request
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' ||
+                  isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false ||
+                  (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) ||
+                  !empty($_GET['ajax']) || !empty($_POST['ajax']);
+
         if (!empty($errors)) {
-            $ticket = $this->ticketModel->find($ticketId);
-            $this->view('tickets/update_payment', [
-                'ticket' => $ticket,
-                'errors' => $errors,
-                'old' => $_POST,
-                'user' => $this->getCurrentUser()
-            ]);
-            return;
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => reset($errors)
+                ]);
+                return;
+            } else {
+                $ticket = $this->ticketModel->find($ticketId);
+                $this->view('tickets/update_payment', [
+                    'ticket' => $ticket,
+                    'errors' => $errors,
+                    'old' => $_POST,
+                    'user' => $this->getCurrentUser()
+                ]);
+                return;
+            }
         }
-        
+
         try {
             $paymentMethod = $_POST['payment_method'];
             $user = $this->getCurrentUser();
             
-            // Handle evidence file upload
+            // Handle evidence file upload (only for non-AJAX requests)
             $evidenceFile = null;
-            if (isset($_FILES['evidence_file']) && $_FILES['evidence_file']['error'] === UPLOAD_ERR_OK) {
+            if (!$isAjax && isset($_FILES['evidence_file']) && $_FILES['evidence_file']['error'] === UPLOAD_ERR_OK) {
                 $evidenceFile = $this->handleEvidenceUpload($_FILES['evidence_file']);
             }
             
@@ -415,23 +430,39 @@ class TicketsController extends BaseController {
             }
             
             if ($this->ticketModel->update($ticketId, $updateData)) {
-                $this->redirect('tickets', 'success', 'Método de pago actualizado correctamente');
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Método de pago actualizado correctamente'
+                    ]);
+                    return;
+                } else {
+                    $this->redirect('tickets', 'success', 'Método de pago actualizado correctamente');
+                }
             } else {
                 throw new Exception('Error al actualizar en la base de datos');
             }
             
         } catch (Exception $e) {
-            $ticket = $this->ticketModel->find($ticketId);
-            $this->view('tickets/update_payment', [
-                'ticket' => $ticket,
-                'error' => 'Error al actualizar el método de pago: ' . $e->getMessage(),
-                'old' => $_POST,
-                'user' => $this->getCurrentUser()
-            ]);
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Error al actualizar el método de pago: ' . $e->getMessage()
+                ]);
+                return;
+            } else {
+                $ticket = $this->ticketModel->find($ticketId);
+                $this->view('tickets/update_payment', [
+                    'ticket' => $ticket,
+                    'error' => 'Error al actualizar el método de pago: ' . $e->getMessage(),
+                    'old' => $_POST,
+                    'user' => $this->getCurrentUser()
+                ]);
+            }
         }
-    }
-    
-    private function handleEvidenceUpload($file) {
+    }    private function handleEvidenceUpload($file) {
         // Create evidence directory if it doesn't exist
         $evidenceDir = UPLOAD_EVIDENCE_PATH;
         if (!is_dir($evidenceDir)) {

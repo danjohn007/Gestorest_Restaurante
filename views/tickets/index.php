@@ -143,9 +143,35 @@
                             <strong>$<?= number_format($ticket['total'], 2) ?></strong>
                         </td>
                         <td>
-                            <span class="badge payment-<?= $ticket['payment_method'] ?>">
-                                <?= getPaymentMethodText($ticket['payment_method']) ?>
-                            </span>
+                            <?php if (empty($ticket['payment_method'])): ?>
+                                <!-- Select para elegir método de pago -->
+                                <select class="form-select form-select-sm payment-method-select" 
+                                        data-ticket-id="<?= $ticket['id'] ?>" 
+                                        style="min-width: 130px;">
+                                    <option value="">Sin especificar</option>
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="tarjeta">Tarjeta</option>
+                                    <option value="transferencia">Transferencia</option>
+                                    <option value="intercambio">Intercambio</option>
+                                    <option value="pendiente_por_cobrar">Pendiente por Cobrar</option>
+                                </select>
+                            <?php else: ?>
+                                <!-- Mostrar método de pago actual con opción de cambiar -->
+                                <div class="d-flex align-items-center">
+                                    <span class="badge payment-<?= $ticket['payment_method'] ?> me-2">
+                                        <?= getPaymentMethodText($ticket['payment_method']) ?>
+                                    </span>
+                                    <?php if (in_array($user['role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+                                    <button type="button" 
+                                            class="btn btn-outline-secondary btn-sm change-payment-btn" 
+                                            data-ticket-id="<?= $ticket['id'] ?>"
+                                            data-current-method="<?= $ticket['payment_method'] ?>"
+                                            title="Cambiar método de pago">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <small><?= date('d/m/Y H:i', strtotime($ticket['created_at'])) ?></small>
@@ -181,11 +207,6 @@
                                     <i class="bi bi-x-circle"></i>
                                 </a>
                                 <?php endif; ?>
-
-                                                                <!-- Botón para agregar propina -->
-                                                                <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#tipModal" data-ticket-id="<?= $ticket['id'] ?>" data-total="<?= $ticket['total'] ?>" data-payment-method="<?= $ticket['payment_method'] ?>">
-                                                                        <i class="bi bi-cash-coin"></i> Agregar Propina
-                                                                </button>
                                                         </div>
                                                 </td>
                                         </tr>
@@ -353,6 +374,155 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Error de red al guardar la propina');
         });
     });
+
+    // Handle payment method change for tickets without payment method
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('payment-method-select')) {
+            const ticketId = e.target.getAttribute('data-ticket-id');
+            const paymentMethod = e.target.value;
+            
+            if (paymentMethod && ticketId) {
+                updatePaymentMethod(ticketId, paymentMethod, e.target);
+            }
+        }
+    });
+
+    // Handle changing existing payment method
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.change-payment-btn')) {
+            const btn = e.target.closest('.change-payment-btn');
+            const ticketId = btn.getAttribute('data-ticket-id');
+            const currentMethod = btn.getAttribute('data-current-method');
+            
+            showPaymentMethodModal(ticketId, currentMethod);
+        }
+    });
+
+    function updatePaymentMethod(ticketId, paymentMethod, selectElement) {
+        // Show loading state
+        const originalHtml = selectElement.parentElement.innerHTML;
+        selectElement.parentElement.innerHTML = '<span class="text-muted">Guardando...</span>';
+        
+        const formData = new FormData();
+        formData.append('payment_method', paymentMethod);
+        
+        fetch(`<?= BASE_URL ?>/tickets/updatePaymentMethod/${ticketId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error de respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.success) {
+                // Show success message briefly before reload
+                selectElement.parentElement.innerHTML = '<span class="text-success">✓ Guardado</span>';
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
+            } else {
+                // Restore original content on error
+                selectElement.parentElement.innerHTML = originalHtml;
+                alert(result.error || 'Error al actualizar el método de pago');
+            }
+        })
+        .catch(error => {
+            // Restore original content on error
+            selectElement.parentElement.innerHTML = originalHtml;
+            alert('Error de conexión al actualizar el método de pago');
+            console.error('Error:', error);
+        });
+    }
+
+    function showPaymentMethodModal(ticketId, currentMethod) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cambiar Método de Pago</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nuevo método de pago:</label>
+                            <select class="form-select" id="newPaymentMethod">
+                                <option value="">Sin especificar</option>
+                                <option value="efectivo" ${currentMethod === 'efectivo' ? 'selected' : ''}>Efectivo</option>
+                                <option value="tarjeta" ${currentMethod === 'tarjeta' ? 'selected' : ''}>Tarjeta</option>
+                                <option value="transferencia" ${currentMethod === 'transferencia' ? 'selected' : ''}>Transferencia</option>
+                                <option value="intercambio" ${currentMethod === 'intercambio' ? 'selected' : ''}>Intercambio</option>
+                                <option value="pendiente_por_cobrar" ${currentMethod === 'pendiente_por_cobrar' ? 'selected' : ''}>Pendiente por Cobrar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="savePaymentMethodChange('${ticketId}')">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+        
+        // Remove modal from DOM when hidden
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    window.savePaymentMethodChange = function(ticketId) {
+        const newMethod = document.getElementById('newPaymentMethod').value;
+        const formData = new FormData();
+        formData.append('payment_method', newMethod);
+        
+        // Disable button while saving
+        const saveBtn = event.target;
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Guardando...';
+        
+        fetch(`<?= BASE_URL ?>/tickets/updatePaymentMethod/${ticketId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error de respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.success) {
+                // Close modal and reload
+                const modal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
+                if (modal) modal.hide();
+                location.reload();
+            } else {
+                alert(result.error || 'Error al actualizar el método de pago');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Guardar';
+            }
+        })
+        .catch(error => {
+            alert('Error de conexión al actualizar el método de pago');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Guardar';
+            console.error('Error:', error);
+        });
+    };
 });
 </script>
 
@@ -402,14 +572,28 @@ document.addEventListener('DOMContentLoaded', function() {
 .payment-transferencia { background-color: #6f42c1; color: #fff; }
 .payment-intercambio { background-color: #17a2b8; color: #fff; }
 .payment-pendiente_por_cobrar { background-color: #dc3545; color: #fff; }
+.payment- { background-color: #6c757d; color: #fff; } /* For empty payment method */
 
 .border-left-primary {
     border-left: 4px solid #0d6efd !important;
+}
+
+.payment-method-select {
+    font-size: 0.875rem;
+}
+
+.change-payment-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
 }
 </style>
 
 <?php
 function getPaymentMethodText($method) {
+    if (empty($method)) {
+        return 'Sin especificar';
+    }
+    
     $methods = [
         'efectivo' => 'Efectivo',
         'tarjeta' => 'Tarjeta',
