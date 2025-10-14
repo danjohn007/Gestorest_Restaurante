@@ -239,7 +239,7 @@
                                    title="🖨️ Imprimir Pedido para Cocina" target="_blank">
                                     <i class="bi bi-printer-fill"></i>
                                 </a>
-                                <a href="<?= BASE_URL ?>/orders/view/<?= $order['id'] ?>" 
+                                <a href="<?= BASE_URL ?>/orders/show/<?= $order['id'] ?>" 
                                    class="btn btn-view-order btn-sm" 
                                    title="👁️ Ver detalles completos">
                                     <i class="bi bi-eye-fill"></i>
