@@ -93,7 +93,8 @@ class Ticket extends BaseModel {
                 throw new Exception('El subtotal debe ser mayor a cero');
             }
             
-            if (!in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
+            // Allow null/empty payment method
+            if ($paymentMethod !== null && $paymentMethod !== '' && !in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
                 throw new Exception('Método de pago inválido');
             }
             
@@ -384,7 +385,8 @@ class Ticket extends BaseModel {
                 throw new Exception('El subtotal debe ser mayor a cero');
             }
             
-            if (!in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
+            // Allow null/empty payment method
+            if ($paymentMethod !== null && $paymentMethod !== '' && !in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
                 throw new Exception('Método de pago inválido');
             }
             
@@ -555,7 +557,8 @@ class Ticket extends BaseModel {
                 throw new Exception('El subtotal debe ser mayor a cero');
             }
             
-            if (!in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
+            // Allow null/empty payment method
+            if ($paymentMethod !== null && $paymentMethod !== '' && !in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
                 throw new Exception('Método de pago inválido');
             }
             
@@ -980,8 +983,9 @@ class Ticket extends BaseModel {
     }
     
     public function updatePaymentMethod($ticketId, $paymentMethod) {
-        $validMethods = ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
-        if (!in_array($paymentMethod, $validMethods)) {
+        $validMethods = ['', 'efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
+        // Allow null/empty payment method
+        if ($paymentMethod !== null && !in_array($paymentMethod, $validMethods)) {
             return false;
         }
         
@@ -1032,7 +1036,8 @@ class Ticket extends BaseModel {
                 throw new Exception('El subtotal debe ser mayor a cero');
             }
             
-            if (!in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
+            // Allow null/empty payment method
+            if ($paymentMethod !== null && $paymentMethod !== '' && !in_array($paymentMethod, ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'])) {
                 throw new Exception('Método de pago inválido');
             }
             
@@ -1445,7 +1450,8 @@ class Ticket extends BaseModel {
                 if (preg_match("/^enum\((.+)\)$/", $enumValues, $matches)) {
                     $enumOptions = str_getcsv($matches[1], ',', "'");
                     
-                    if (!in_array($ticketData['payment_method'], $enumOptions)) {
+                    // Only validate if payment_method is not null or empty
+                    if ($ticketData['payment_method'] !== null && $ticketData['payment_method'] !== '' && !in_array($ticketData['payment_method'], $enumOptions)) {
                         $validOptions = implode(', ', $enumOptions);
                         
                         // Provide specific guidance based on missing payment method
@@ -1453,7 +1459,7 @@ class Ticket extends BaseModel {
                         $errorMessage .= "Métodos válidos: {$validOptions}.\n";
                         
                         // Check if this is a known missing payment method that needs migration
-                        $requiredMethods = ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
+                        $requiredMethods = ['', 'efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
                         $missingMethods = array_diff($requiredMethods, $enumOptions);
                         
                         if (!empty($missingMethods)) {

@@ -167,12 +167,11 @@
                 <div class="card-body">
                     <!-- Payment Method Selection -->
                     <div class="mb-3">
-                        <label for="payment_method" class="form-label">Método de Pago *</label>
+                        <label for="payment_method" class="form-label">Método de Pago</label>
                         <select class="form-select <?= isset($errors['payment_method']) ? 'is-invalid' : '' ?>" 
                                 id="payment_method" 
-                                name="payment_method" 
-                                required>
-                            <option value="">Seleccionar método...</option>
+                                name="payment_method">
+                            <option value="">Sin especificar</option>
                             <option value="efectivo" <?= (($old['payment_method'] ?? '') === 'efectivo') ? 'selected' : '' ?>>
                                 <i class="bi bi-cash"></i> Efectivo
                             </option>
@@ -195,44 +194,6 @@
                             </div>
                         <?php endif; ?>
                     </div>
-                    
-                    <!-- New Grouping Mode Option -->
-                    <div class="mb-3">
-                        <label for="group_by" class="form-label">Agrupar Pedidos Por</label>
-                        <select class="form-select" id="group_by" name="group_by">
-                            <option value="customer" <?= (($old['group_by'] ?? 'customer') === 'customer') ? 'selected' : '' ?>>
-                                <i class="bi bi-person"></i> Cliente (Recomendado)
-                            </option>
-                            <option value="table" <?= (($old['group_by'] ?? '') === 'table') ? 'selected' : '' ?>>
-                                <i class="bi bi-table"></i> Mesa (Modo tradicional)
-                            </option>
-                        </select>
-                        <div class="form-text">
-                            <strong>Cliente:</strong> Agrupa pedidos por cliente, permitiendo un mejor control de cuentas individuales.<br>
-                            <strong>Mesa:</strong> Agrupa todos los pedidos de la mesa independientemente del cliente.
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3" id="separationModeContainer" style="display: none;">
-                        <label for="separation_mode" class="form-label">Tipo de Ticket</label>
-                        <select class="form-select" id="separation_mode" name="separation_mode">
-                            <option value="single">Ticket único (todos los pedidos juntos)</option>
-                            <option value="by_customer">Tickets separados por cliente</option>
-                        </select>
-                        <div class="form-text">
-                            Seleccione cómo generar los tickets para esta mesa
-                        </div>
-                    </div>
-                    
-                    <div id="customerSeparationOptions" style="display: none;">
-                        <!-- This will be populated dynamically with customer options -->
-                    </div>
-                    
-                    <?php if (isset($errors['customer_payment_methods'])): ?>
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle"></i> <?= htmlspecialchars($errors['customer_payment_methods']) ?>
-                        </div>
-                    <?php endif; ?>
                     
                     <div class="card bg-light mb-3" id="ticketPreview" style="display: none;">
                         <div class="card-body">
@@ -304,9 +265,9 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="individual_payment_method" class="form-label">Método de Pago *</label>
-                        <select class="form-select" id="individual_payment_method" name="payment_method" required>
-                            <option value="">Seleccionar método...</option>
+                        <label for="individual_payment_method" class="form-label">Método de Pago</label>
+                        <select class="form-select" id="individual_payment_method" name="payment_method">
+                            <option value="">Sin especificar</option>
                             <option value="efectivo">
                                 <i class="bi bi-cash"></i> Efectivo
                             </option>
@@ -359,9 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const selectedTable = tableData.find(t => t.table_id == tableId);
                 
                 if (selectedTable) {
-                    // Show separation mode options
-                    document.getElementById('separationModeContainer').style.display = 'block';
-                    
                     const totalWithTax = selectedTable.total_amount;
                     const subtotal = totalWithTax / 1.16;
                     const tax = totalWithTax - subtotal;
@@ -502,156 +460,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (selectedTable) {
         selectedTable.dispatchEvent(new Event('change'));
     }
-    
-    // Handle separation mode changes
-    document.getElementById('separation_mode').addEventListener('change', function() {
-        const selectedTableId = document.querySelector('input[name="table_id"]:checked')?.value;
-        if (!selectedTableId) return;
-        
-        const tableData = <?= json_encode($tables) ?>;
-        const selectedTable = tableData.find(t => t.table_id == selectedTableId);
-        
-        if (this.value === 'by_customer' && selectedTable) {
-            showCustomerSeparationOptions(selectedTable);
-        } else {
-            document.getElementById('customerSeparationOptions').style.display = 'none';
-        }
-    });
-    
-    function showCustomerSeparationOptions(tableData) {
-        // Get unique customers from orders
-        const customers = {};
-        tableData.orders.forEach(order => {
-            const customerKey = order.customer_name || 'Sin cliente asignado';
-            if (!customers[customerKey]) {
-                customers[customerKey] = {
-                    name: customerKey,
-                    orders: [],
-                    total: 0
-                };
-            }
-            customers[customerKey].orders.push(order);
-            customers[customerKey].total += parseFloat(order.total);
-        });
-        
-        let optionsHtml = `
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0">Configurar tickets separados por cliente</h6>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>Instrucciones:</strong><br>
-                        • Marque los clientes que desea incluir en tickets separados<br>
-                        • Seleccione el método de pago para cada cliente<br>
-                        • Los clientes no marcados se incluirán en un ticket conjunto con el método de pago principal
-                    </div>
-        `;
-        
-        const paymentMethodOptions = [
-            { value: 'efectivo', text: 'Efectivo', icon: 'cash' },
-            { value: 'tarjeta', text: 'Tarjeta', icon: 'credit-card' },
-            { value: 'transferencia', text: 'Transferencia', icon: 'bank' },
-            { value: 'intercambio', text: 'Intercambio', icon: 'arrow-left-right' },
-            { value: 'pendiente_por_cobrar', text: 'Pendiente por Cobrar', icon: 'clock-history' }
-        ];
-        
-        Object.keys(customers).forEach((customerKey, index) => {
-            const customer = customers[customerKey];
-            const customerId = customerKey.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-            
-            optionsHtml += `
-                <div class="border rounded p-3 mb-3 customer-separation-item">
-                    <div class="form-check mb-3">
-                        <input class="form-check-input customer-checkbox" type="checkbox" 
-                               value="${customerKey}" 
-                               name="separate_customers[]" 
-                               id="customer_${customerId}"
-                               data-customer-id="${customerId}">
-                        <label class="form-check-label fw-bold" for="customer_${customerId}">
-                            ${customer.name}
-                        </label>
-                    </div>
-                    
-                    <div class="customer-details">
-                        <div class="row mb-2">
-                            <div class="col-6">
-                                <small class="text-muted">Pedidos:</small> ${customer.orders.length}
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted">Total:</small> <strong>$${customer.total.toFixed(2)}</strong>
-                            </div>
-                        </div>
-                        
-                        <div class="customer-payment-method" id="payment_method_container_${customerId}" style="display: none;">
-                            <label for="customer_payment_method_${customerId}" class="form-label">
-                                <i class="bi bi-credit-card"></i> Método de Pago para ${customer.name}
-                            </label>
-                            <select class="form-select form-select-sm" 
-                                    name="customer_payment_methods[${customerKey}]" 
-                                    id="customer_payment_method_${customerId}">
-                                <option value="">Seleccionar método...</option>`;
-            
-            paymentMethodOptions.forEach(method => {
-                optionsHtml += `<option value="${method.value}">
-                    ${method.text}
-                </option>`;
-            });
-            
-            optionsHtml += `
-                            </select>
-                        </div>
-                        
-                        <div class="mt-2">
-                            <small class="text-muted">Pedidos incluidos:</small>
-                            <ul class="list-unstyled mt-1">`;
-            
-            customer.orders.forEach(order => {
-                optionsHtml += `
-                    <li class="small">• Pedido #${order.id} - $${parseFloat(order.total).toFixed(2)}</li>
-                `;
-            });
-            
-            optionsHtml += `
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        optionsHtml += `
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <strong>Importante:</strong> Se generará un ticket separado para cada cliente marcado. 
-                        Los clientes no marcados se incluirán en un ticket conjunto.
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.getElementById('customerSeparationOptions').innerHTML = optionsHtml;
-        document.getElementById('customerSeparationOptions').style.display = 'block';
-        
-        // Add event listeners for customer checkboxes
-        document.querySelectorAll('.customer-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const customerId = this.getAttribute('data-customer-id');
-                const paymentContainer = document.getElementById(`payment_method_container_${customerId}`);
-                const paymentSelect = document.getElementById(`customer_payment_method_${customerId}`);
-                
-                if (this.checked) {
-                    paymentContainer.style.display = 'block';
-                    paymentSelect.required = true;
-                } else {
-                    paymentContainer.style.display = 'none';
-                    paymentSelect.required = false;
-                    paymentSelect.value = '';
-                }
-            });
-        });
-    }
 });
 </script>
 
@@ -674,23 +482,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .form-check-input:checked ~ .form-check-label .card-title {
     color: #0d6efd;
-}
-
-.customer-separation-item {
-    background-color: #f8f9fa;
-}
-
-.customer-separation-item .form-check-input:checked ~ .form-check-label {
-    color: #0d6efd;
-    font-weight: bold;
-}
-
-.customer-payment-method {
-    margin-left: 1.5rem;
-    padding: 0.5rem;
-    background-color: #fff;
-    border-radius: 0.375rem;
-    border: 1px solid #dee2e6;
 }
 
 .order-item {

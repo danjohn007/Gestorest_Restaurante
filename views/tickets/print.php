@@ -157,7 +157,9 @@
         <div>Mesero: <?= htmlspecialchars($ticket['waiter_name']) ?></div>
         <div>Cajero: <?= htmlspecialchars($ticket['cashier_name']) ?></div>
         <div>Fecha: <?= date('d/m/Y H:i:s', strtotime($ticket['created_at'])) ?></div>
+        <?php if (!empty($ticket['payment_method'])): ?>
         <div>Pago: <?= getPaymentMethodText($ticket['payment_method']) ?></div>
+        <?php endif; ?>
         <?php
         // Calcular totales reales sumando todos los productos
         $total = 0;
@@ -277,6 +279,11 @@
 
 <?php
 function getPaymentMethodText($method) {
+    // Handle null, empty, or unspecified payment methods
+    if ($method === null || $method === '') {
+        return 'SIN ESPECIFICAR';
+    }
+    
     $methods = [
         'efectivo' => 'EFECTIVO',
         'tarjeta' => 'TARJETA',

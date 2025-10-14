@@ -164,7 +164,7 @@ class TicketsController extends BaseController {
         }
         
         $user = $this->getCurrentUser();
-        $paymentMethod = $_POST['payment_method'] ?? 'efectivo';
+        $paymentMethod = !empty($_POST['payment_method']) ? $_POST['payment_method'] : null; // Allow null/empty payment method
         
         try {
             // Check if we're creating a ticket for multiple orders or single order
@@ -232,19 +232,19 @@ class TicketsController extends BaseController {
     
     private function validateTicketInput($data) {
         $errors = $this->validateInput($data, [
-            'payment_method' => ['required' => true]
+            // payment_method is now optional
         ]);
         
         // Get available payment methods based on system settings
         $systemSettingsModel = new SystemSettings();
-        $validMethods = ['efectivo', 'tarjeta', 'transferencia', 'intercambio'];
+        $validMethods = ['', 'efectivo', 'tarjeta', 'transferencia', 'intercambio']; // Added empty string as valid
         
         // Add collections method only if enabled
         if ($systemSettingsModel->isCollectionsEnabled()) {
             $validMethods[] = 'pendiente_por_cobrar';
         }
         
-        // Validate payment method
+        // Validate payment method (now allow empty)
         if (!in_array($data['payment_method'] ?? '', $validMethods)) {
             $errors['payment_method'] = 'Método de pago inválido o no disponible';
         }
@@ -342,7 +342,7 @@ class TicketsController extends BaseController {
         $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $paymentMethod = $_POST['payment_method'] ?? 'efectivo';
+            $paymentMethod = !empty($_POST['payment_method']) ? $_POST['payment_method'] : null; // Allow null/empty payment method
             
             if ($this->ticketModel->updatePaymentMethod($ticketId, $paymentMethod)) {
                 $this->redirect('tickets/pendingPayments', 'success', 'Pago marcado como cobrado');
@@ -374,11 +374,11 @@ class TicketsController extends BaseController {
     
     private function processPaymentMethodUpdate($ticketId) {
         $errors = $this->validateInput($_POST, [
-            'payment_method' => ['required' => true]
+            // payment_method is now optional for updates
         ]);
         
-        // Validate payment method
-        $validMethods = ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
+        // Validate payment method (now allow empty)
+        $validMethods = ['', 'efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
         if (!in_array($_POST['payment_method'] ?? '', $validMethods)) {
             $errors['payment_method'] = 'Método de pago inválido';
         }
@@ -494,7 +494,7 @@ class TicketsController extends BaseController {
             
             try {
                 $orderId = $_POST['order_id'];
-                $paymentMethod = $_POST['payment_method'] ?? 'efectivo';
+                $paymentMethod = !empty($_POST['payment_method']) ? $_POST['payment_method'] : null; // Allow null/empty payment method
                 
                 $ticketId = $this->ticketModel->createExpiredOrderTicket($orderId, $user['id'], $paymentMethod);
                 
@@ -513,19 +513,19 @@ class TicketsController extends BaseController {
     
     private function validateExpiredTicketInput($data) {
         $errors = $this->validateInput($data, [
-            'order_id' => ['required' => true],
-            'payment_method' => ['required' => true]
+            'order_id' => ['required' => true]
+            // payment_method is now optional
         ]);
         
         // Get available payment methods based on system settings
-        $validMethods = ['efectivo', 'tarjeta', 'transferencia', 'intercambio'];
+        $validMethods = ['', 'efectivo', 'tarjeta', 'transferencia', 'intercambio']; // Added empty string as valid
         
         // Add collections method only if enabled
         if ($this->systemSettingsModel->isCollectionsEnabled()) {
             $validMethods[] = 'pendiente_por_cobrar';
         }
         
-        // Validate payment method
+        // Validate payment method (now allow empty)
         if (!in_array($data['payment_method'] ?? '', $validMethods)) {
             $errors['payment_method'] = 'Método de pago inválido o no disponible';
         }
@@ -610,8 +610,8 @@ class TicketsController extends BaseController {
                             $customerPaymentMethod = $customerPaymentMethods[$customerName] ?? $defaultPaymentMethod;
                             
                             // Validate customer payment method
-                            $validMethods = ['efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
-                            if (!in_array($customerPaymentMethod, $validMethods)) {
+                            $validMethods = ['', 'efectivo', 'tarjeta', 'transferencia', 'intercambio', 'pendiente_por_cobrar'];
+                            if ($customerPaymentMethod !== null && !in_array($customerPaymentMethod, $validMethods)) {
                                 throw new Exception("Método de pago inválido para cliente '{$customerName}': {$customerPaymentMethod}");
                             }
                             
