@@ -309,6 +309,7 @@ class Order extends BaseModel {
     }
     
     public function getOrdersReadyForTicket() {
+        $today = date('Y-m-d');
         $query = "SELECT o.*, t.number as table_number, 
                          u.name as waiter_name, w.employee_code
                   FROM {$this->table} o
@@ -316,16 +317,17 @@ class Order extends BaseModel {
                   JOIN waiters w ON o.waiter_id = w.id
                   JOIN users u ON w.user_id = u.id
                   LEFT JOIN tickets tk ON o.id = tk.order_id
-                  WHERE o.status = ? AND tk.id IS NULL
+                  WHERE o.status = ? AND tk.id IS NULL AND DATE(o.created_at) = ?
                   ORDER BY o.created_at ASC";
         
         $stmt = $this->db->prepare($query);
-        $stmt->execute([ORDER_READY]);
+        $stmt->execute([ORDER_READY, $today]);
         
         return $stmt->fetchAll();
     }
     
     public function getReadyOrdersGroupedByTable() {
+        $today = date('Y-m-d');
         $query = "SELECT o.*, t.number as table_number, 
                          u.name as waiter_name, w.employee_code,
                          COALESCE(o.customer_name, c.name, 'Sin cliente asignado') as customer_name,
@@ -336,11 +338,11 @@ class Order extends BaseModel {
                   JOIN users u ON w.user_id = u.id
                   LEFT JOIN customers c ON o.customer_id = c.id
                   LEFT JOIN tickets tk ON o.id = tk.order_id
-                  WHERE o.status = ? AND tk.id IS NULL
+                  WHERE o.status = ? AND tk.id IS NULL AND DATE(o.created_at) = ?
                   ORDER BY o.table_id ASC, o.created_at ASC";
         
         $stmt = $this->db->prepare($query);
-        $stmt->execute([ORDER_READY]);
+        $stmt->execute([ORDER_READY, $today]);
         
         $orders = $stmt->fetchAll();
         
@@ -436,6 +438,12 @@ class Order extends BaseModel {
             $params[] = $searchTerm;
             $params[] = $searchTerm;
             $params[] = $searchTerm;
+        }
+        
+        // Add table number filter
+        if (isset($filters['table_number']) && !empty($filters['table_number'])) {
+            $query .= " AND t.number = ?";
+            $params[] = $filters['table_number'];
         }
         
         $query .= " GROUP BY o.id ORDER BY o.created_at DESC";

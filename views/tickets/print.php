@@ -222,16 +222,37 @@
         // Mostrar todos los productos de todos los pedidos incluidos en el ticket
         $total_detalles = 0;
         if (!empty($ticket['order_ids']) && count($ticket['order_ids']) > 1) {
-            // Multiple orders - show subtotals by order/client
+            // Multiple orders - check if we need to show customer names
+            $customers = []; // Use associative array for O(1) lookup
+            $orderCustomerMap = []; // Create a lookup map for efficiency
+            foreach ($ticket['orders'] as $order) {
+                $customerName = $order['customer_name'] ?? 'General';
+                $orderCustomerMap[$order['id']] = $customerName;
+                $customers[$customerName] = true; // O(1) insertion
+            }
+            
+            // Show customer names only if there are multiple different customers
+            $showCustomerNames = count($customers) > 1;
+            
             $orderCount = 0;
             foreach ($ticket['order_ids'] as $orderId) {
                 if (!empty($ticket['orders_items'][$orderId])) {
                     $orderCount++;
                     $orderSubtotal = 0;
                     
+                    // Get customer name from lookup map
+                    $orderCustomerName = $orderCustomerMap[$orderId] ?? 'General';
+                    
                     // Show order separator for multiple orders
                     if ($orderCount > 1) {
-                        echo '<div class="order-separator">--- Pedido #' . htmlspecialchars($orderId) . ' ---</div>';
+                        if ($showCustomerNames) {
+                            echo '<div class="order-separator">--- Pedido #' . htmlspecialchars($orderId) . ' ---<br>Cliente: ' . htmlspecialchars($orderCustomerName) . '</div>';
+                        } else {
+                            echo '<div class="order-separator">--- Pedido #' . htmlspecialchars($orderId) . ' ---</div>';
+                        }
+                    } else if ($showCustomerNames) {
+                        // First order with customer name
+                        echo '<div class="order-separator">Pedido #' . htmlspecialchars($orderId) . '<br>Cliente: ' . htmlspecialchars($orderCustomerName) . '</div>';
                     }
                     
                     foreach ($ticket['orders_items'][$orderId] as $item) {

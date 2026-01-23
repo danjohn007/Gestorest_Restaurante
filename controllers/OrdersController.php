@@ -68,6 +68,11 @@ class OrdersController extends BaseController {
             $filters['search'] = $_GET['search'];
         }
         
+        // Add table filter
+        if (isset($_GET['table_filter']) && !empty($_GET['table_filter'])) {
+            $filters['table_number'] = $_GET['table_filter'];
+        }
+        
         if (!isset($orders)) {
             if ($showFuture) {
                 $orders = $this->orderModel->getFuturePickupOrders($filters);
@@ -76,10 +81,18 @@ class OrdersController extends BaseController {
             }
         }
         
+        // Get unique table numbers for filter dropdown
+        $tableNumbers = [];
+        if (!empty($orders)) {
+            $tableNumbers = array_unique(array_filter(array_column($orders, 'table_number')));
+            sort($tableNumbers);
+        }
+        
         $this->view('orders/index', [
             'orders' => $orders,
             'user' => $user,
-            'showFuture' => $showFuture
+            'showFuture' => $showFuture,
+            'tableNumbers' => $tableNumbers
         ]);
     }
     
@@ -612,9 +625,16 @@ class OrdersController extends BaseController {
                 $isPublicOrder = !empty($order['customer_name']) || !empty($order['customer_phone']);
                 $isPickup = $order['is_pickup'] ?? false;
             }
+            
+            // When editing, skip validation because:
+            // - Table is not editable for non-public orders (shown as static display)
+            // - Notes field doesn't require validation
+            // - New items are validated individually in processEdit
+            // This allows editing notes and adding items without form validation errors
+            return $errors;
         }
         
-        // Table is required for internal orders and pickup orders
+        // Table is required for internal orders and pickup orders (only when creating)
         if (!$isPublicOrder || $isPickup) {
             $errors = $this->validateInput($data, [
                 'table_id' => ['required' => true]
