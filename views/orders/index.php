@@ -133,19 +133,13 @@
                 <select class="form-select" id="table_filter" name="table_filter">
                     <option value="">Todas las mesas</option>
                     <?php 
-                    // Get unique table numbers from orders
-                    $tableNumbers = array_unique(array_column($orders, 'table_number'));
-                    sort($tableNumbers);
+                    // Table numbers are now provided by controller
                     foreach ($tableNumbers as $tableNum): 
-                        if (!empty($tableNum)):
                     ?>
                         <option value="<?= $tableNum ?>" <?= (($_GET['table_filter'] ?? '') == $tableNum) ? 'selected' : '' ?>>
                             Mesa <?= $tableNum ?>
                         </option>
-                    <?php 
-                        endif;
-                    endforeach; 
-                    ?>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-md-3">

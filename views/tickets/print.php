@@ -224,8 +224,10 @@
         if (!empty($ticket['order_ids']) && count($ticket['order_ids']) > 1) {
             // Multiple orders - check if we need to show customer names
             $customers = [];
+            $orderCustomerMap = []; // Create a lookup map for efficiency
             foreach ($ticket['orders'] as $order) {
                 $customerName = $order['customer_name'] ?? 'General';
+                $orderCustomerMap[$order['id']] = $customerName;
                 if (!in_array($customerName, $customers)) {
                     $customers[] = $customerName;
                 }
@@ -240,14 +242,8 @@
                     $orderCount++;
                     $orderSubtotal = 0;
                     
-                    // Find the customer name for this order
-                    $orderCustomerName = 'General';
-                    foreach ($ticket['orders'] as $order) {
-                        if ($order['id'] == $orderId) {
-                            $orderCustomerName = $order['customer_name'] ?? 'General';
-                            break;
-                        }
-                    }
+                    // Get customer name from lookup map
+                    $orderCustomerName = $orderCustomerMap[$orderId] ?? 'General';
                     
                     // Show order separator for multiple orders
                     if ($orderCount > 1) {

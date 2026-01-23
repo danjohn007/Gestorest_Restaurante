@@ -81,10 +81,18 @@ class OrdersController extends BaseController {
             }
         }
         
+        // Get unique table numbers for filter dropdown
+        $tableNumbers = [];
+        if (!empty($orders)) {
+            $tableNumbers = array_unique(array_filter(array_column($orders, 'table_number')));
+            sort($tableNumbers);
+        }
+        
         $this->view('orders/index', [
             'orders' => $orders,
             'user' => $user,
-            'showFuture' => $showFuture
+            'showFuture' => $showFuture,
+            'tableNumbers' => $tableNumbers
         ]);
     }
     
@@ -618,9 +626,12 @@ class OrdersController extends BaseController {
                 $isPickup = $order['is_pickup'] ?? false;
             }
             
-            // When editing, table_id validation is not required since we don't change it for non-public orders
-            // Table is only editable for public orders via the dropdown
-            return $errors; // Skip all validation for editing (notes don't need validation)
+            // When editing, skip validation because:
+            // - Table is not editable for non-public orders (shown as static display)
+            // - Notes field doesn't require validation
+            // - New items are validated individually in processEdit
+            // This allows editing notes and adding items without form validation errors
+            return $errors;
         }
         
         // Table is required for internal orders and pickup orders (only when creating)
