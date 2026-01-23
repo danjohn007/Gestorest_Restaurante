@@ -5,14 +5,26 @@
 
 class OrderAlertSystem {
     constructor() {
-        this.lastCheck = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        this.lastCheck = this.formatDateTime(new Date());
         this.checkInterval = 10000; // Check every 10 seconds
         this.isPlaying = false;
         this.activeAlerts = new Set();
         this.audio = null;
         this.audioContext = null;
+        this.soundQueue = [];
         
         this.init();
+    }
+    
+    formatDateTime(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
     
     init() {
@@ -30,6 +42,12 @@ class OrderAlertSystem {
         const enableAudio = () => {
             if (!this.audioContext) {
                 this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Play queued sounds if there are any pending alerts
+                if (this.soundQueue.length > 0 && this.activeAlerts.size > 0) {
+                    this.soundQueue = [];
+                    this.playNotificationSound();
+                }
             }
             // Remove listeners after first interaction
             document.removeEventListener('click', enableAudio);
@@ -41,35 +59,45 @@ class OrderAlertSystem {
     }
     
     playNotificationSound() {
-        if (this.isPlaying || !this.audioContext) return;
+        // Queue the sound if audio context is not ready yet
+        if (!this.audioContext) {
+            this.soundQueue.push(Date.now());
+            return;
+        }
+        
+        if (this.isPlaying) return;
         
         this.isPlaying = true;
         
-        // Create elegant notification sound using Web Audio API
-        const ctx = this.audioContext;
-        const now = ctx.currentTime;
-        
-        // Create oscillators for a pleasant chord
-        const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 - Major chord
-        
-        frequencies.forEach((freq, index) => {
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
+        try {
+            // Create elegant notification sound using Web Audio API
+            const ctx = this.audioContext;
+            const now = ctx.currentTime;
             
-            oscillator.connect(gainNode);
-            gainNode.connect(ctx.destination);
+            // Create oscillators for a pleasant chord
+            const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 - Major chord
             
-            oscillator.frequency.value = freq;
-            oscillator.type = 'sine';
-            
-            // Envelope: smooth attack and decay
-            gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(0.15, now + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            
-            oscillator.start(now + (index * 0.1));
-            oscillator.stop(now + 0.7);
-        });
+            frequencies.forEach((freq, index) => {
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                // Envelope: smooth attack and decay
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.15, now + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                
+                oscillator.start(now + (index * 0.1));
+                oscillator.stop(now + 0.7);
+            });
+        } catch (error) {
+            console.error('Error playing notification sound:', error);
+        }
         
         // Loop the sound every 3 seconds until dismissed
         setTimeout(() => {

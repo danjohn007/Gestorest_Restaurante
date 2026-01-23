@@ -180,18 +180,21 @@ class DashboardController extends BaseController {
         // Get timestamp from request (last check time) with validation
         $lastCheck = $_GET['last_check'] ?? date('Y-m-d H:i:s', strtotime('-1 minute'));
         
-        // Validate timestamp format (YYYY-MM-DD HH:MM:SS)
-        if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $lastCheck)) {
-            $lastCheck = date('Y-m-d H:i:s', strtotime('-1 minute'));
-        }
+        // Validate timestamp using DateTime for proper validation
+        $dateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $lastCheck);
         
-        // Additional validation: ensure timestamp is not too old (max 1 hour ago) or in the future
-        $lastCheckTime = strtotime($lastCheck);
-        $now = time();
-        $oneHourAgo = $now - 3600;
-        
-        if ($lastCheckTime < $oneHourAgo || $lastCheckTime > $now) {
+        // Check if the date is valid and matches the input
+        if (!$dateTime || $dateTime->format('Y-m-d H:i:s') !== $lastCheck) {
             $lastCheck = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        } else {
+            // Additional validation: ensure timestamp is not too old (max 1 hour ago) or in the future
+            $lastCheckTime = $dateTime->getTimestamp();
+            $now = time();
+            $oneHourAgo = $now - 3600;
+            
+            if ($lastCheckTime < $oneHourAgo || $lastCheckTime > $now) {
+                $lastCheck = date('Y-m-d H:i:s', strtotime('-1 minute'));
+            }
         }
         
         // Get new pending orders since last check
