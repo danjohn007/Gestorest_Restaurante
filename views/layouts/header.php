@@ -220,9 +220,8 @@
         if (!$hideButton): 
         ?>
         <a href="<?= BASE_URL ?>/orders/create" 
-           class="btn btn-primary btn-lg shadow-lg" 
+           class="btn btn-primary btn-lg shadow-lg fixed-new-order-btn" 
            id="globalNewOrderBtn"
-           style="position: fixed; bottom: 30px; right: 30px; z-index: 1050; border-radius: 50px; padding: 15px 25px;"
            title="Crear Nuevo Pedido">
             <i class="bi bi-plus-circle-fill"></i> Nuevo Pedido
         </a>

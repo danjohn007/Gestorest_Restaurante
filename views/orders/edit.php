@@ -282,7 +282,7 @@
                 <h5 class="mb-0">Total Actual:</h5>
                 <h3 class="mb-0 text-primary fw-bold">$<?= number_format($grandTotal, 2) ?></h3>
             </div>
-            <button type="button" class="btn btn-primary btn-lg" onclick="document.querySelector('form').submit();">
+            <button type="button" class="btn btn-primary btn-lg" id="fixedUpdateBtn">
                 <i class="bi bi-check-circle-fill"></i> ACTUALIZAR PEDIDO
             </button>
         </div>
@@ -294,15 +294,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const newItemsPreview = document.getElementById('newItemsPreview');
     const newItemsList = document.getElementById('newItemsList');
     const fixedUpdateBar = document.getElementById('fixedUpdateBar');
+    const fixedUpdateBtn = document.getElementById('fixedUpdateBtn');
     const dishSearch = document.getElementById('dish_search');
     const clearDishSearchBtn = document.getElementById('clear_dish_search');
+    const SCROLL_THRESHOLD = 300;
+    
+    // Fixed update button click handler
+    if (fixedUpdateBtn) {
+        fixedUpdateBtn.addEventListener('click', function() {
+            document.querySelector('form').submit();
+        });
+    }
     
     // Show/hide fixed bar on scroll
     let scrollTimeout;
     window.addEventListener('scroll', function() {
         clearTimeout(scrollTimeout);
         scrollTimeout = setTimeout(function() {
-            if (window.scrollY > 300) {
+            if (window.scrollY > SCROLL_THRESHOLD) {
                 fixedUpdateBar.style.display = 'block';
             } else {
                 fixedUpdateBar.style.display = 'none';

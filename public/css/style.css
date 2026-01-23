@@ -408,3 +408,13 @@ body {
     background: linear-gradient(45deg, rgba(25, 135, 84, 0.15), rgba(40, 167, 69, 0.15));
     border-color: rgba(25, 135, 84, 0.3);
 }
+
+/* Fixed action buttons */
+.fixed-new-order-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1050;
+    border-radius: 50px;
+    padding: 15px 25px;
+}
