@@ -234,6 +234,26 @@ class OrdersController extends BaseController {
         }
     }
     
+    public function markAsReady($id) {
+        $order = $this->orderModel->find($id);
+        if (!$order) {
+            $this->redirect('orders', 'error', 'Pedido no encontrado');
+            return;
+        }
+        
+        if (!in_array($order['status'], [ORDER_PENDING, ORDER_PREPARING])) {
+            $this->redirect('orders', 'error', 'Solo se pueden marcar como listos pedidos pendientes o en preparación');
+            return;
+        }
+        
+        try {
+            $this->orderModel->update($id, ['status' => ORDER_READY]);
+            $this->redirect('orders', 'success', 'Pedido marcado como listo');
+        } catch (Exception $e) {
+            $this->redirect('orders', 'error', 'Error al actualizar el estado: ' . $e->getMessage());
+        }
+    }
+    
     public function confirmPublicOrder($id) {
         $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
         

@@ -130,28 +130,6 @@
                                   rows="3" 
                                   placeholder="Instrucciones especiales..."><?= htmlspecialchars($old['notes'] ?? '') ?></textarea>
                     </div>
-                    
-                    <div class="card bg-light">
-                        <div class="card-body">
-                            <h6 class="card-title">Total del Pedido</h6>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="card-title mb-0">Total del Pedido</h6>
-                                <div class="d-flex gap-2">
-                                    <a href="<?= BASE_URL ?>/orders" class="btn btn-secondary btn-sm" id="cancelOrderBtn">
-                                        <i class="bi bi-x-circle"></i> Cancelar
-                                    </a>
-                                    <button type="submit" class="btn btn-primary btn-sm" id="confirmOrderBtn">
-                                        <i class="bi bi-check-circle"></i> Confirmar
-                                    </button>
-                                </div>
-                            </div>
-                            <h3 class="text-primary mb-0" id="orderTotal">$0.00</h3>
-                            <div class="mt-3">
-                                <h6 class="mb-2">Platillos agregados:</h6>
-                                <ul id="addedDishesList" class="list-group"></ul>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -719,7 +697,10 @@ document.addEventListener('DOMContentLoaded', function() {
             total += quantity * price;
         });
         
-        totalElement.textContent = '$' + total.toFixed(2);
+        // Update static total element if it exists
+        if (totalElement) {
+            totalElement.textContent = '$' + total.toFixed(2);
+        }
         
         // Update fixed bottom bar
         const fixedOrderTotal = document.getElementById('fixedOrderTotal');

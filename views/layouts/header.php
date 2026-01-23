@@ -211,3 +211,18 @@
             endif;
         endforeach; 
         ?>
+        
+        <!-- Global Fixed New Order Button -->
+        <?php 
+        // Get current URL path to hide button on create order page
+        $currentPath = $_SERVER['REQUEST_URI'] ?? '';
+        $hideButton = strpos($currentPath, '/orders/create') !== false;
+        if (!$hideButton): 
+        ?>
+        <a href="<?= BASE_URL ?>/orders/create" 
+           class="btn btn-primary btn-lg shadow-lg fixed-new-order-btn" 
+           id="globalNewOrderBtn"
+           title="Crear Nuevo Pedido">
+            <i class="bi bi-plus-circle-fill"></i> Nuevo Pedido
+        </a>
+        <?php endif; ?>

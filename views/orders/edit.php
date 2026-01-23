@@ -184,6 +184,28 @@
                     </h5>
                 </div>
                 <div class="card-body">
+                    <!-- Dish Search -->
+                    <div class="mb-4">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="dish_search" 
+                                   placeholder="Buscar platillo por nombre o categoría..."
+                                   autocomplete="off">
+                            <button type="button" 
+                                    class="btn btn-outline-secondary" 
+                                    id="clear_dish_search">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Escriba para filtrar los platillos disponibles en tiempo real
+                        </div>
+                    </div>
+                    
                     <div class="row" id="addItemsSection">
                         <?php 
                         $currentCategory = '';
@@ -192,13 +214,13 @@
                                 if ($currentCategory !== ''): ?>
                                     </div>
                                 <?php endif; ?>
-                                <h6 class="text-muted mb-3 mt-4"><?= htmlspecialchars($dish['category']) ?></h6>
-                                <div class="row">
+                                <h6 class="text-muted mb-3 mt-4 category-header" data-category="<?= strtolower(htmlspecialchars($dish['category'])) ?>"><?= htmlspecialchars($dish['category']) ?></h6>
+                                <div class="row category-dishes" data-category="<?= strtolower(htmlspecialchars($dish['category'])) ?>">
                             <?php 
                                 $currentCategory = $dish['category'];
                             endif; 
                         ?>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6 mb-3 dish-item" data-dish-name="<?= strtolower(htmlspecialchars($dish['name'])) ?>" data-dish-category="<?= strtolower(htmlspecialchars($dish['category'])) ?>">
                                 <div class="card dish-card h-100" data-dish-id="<?= $dish['id'] ?>">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -252,10 +274,110 @@
     </div>
 </form>
 
+<!-- Fixed bottom update button -->
+<div id="fixedUpdateBar" class="fixed-bottom bg-white shadow-lg border-top" style="display: none; z-index: 1000;">
+    <div class="container-fluid py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">Total Actual:</h5>
+                <h3 class="mb-0 text-primary fw-bold">$<?= number_format($grandTotal, 2) ?></h3>
+            </div>
+            <button type="button" class="btn btn-primary btn-lg" id="fixedUpdateBtn">
+                <i class="bi bi-check-circle-fill"></i> ACTUALIZAR PEDIDO
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const newItemsPreview = document.getElementById('newItemsPreview');
     const newItemsList = document.getElementById('newItemsList');
+    const fixedUpdateBar = document.getElementById('fixedUpdateBar');
+    const fixedUpdateBtn = document.getElementById('fixedUpdateBtn');
+    const dishSearch = document.getElementById('dish_search');
+    const clearDishSearchBtn = document.getElementById('clear_dish_search');
+    const SCROLL_THRESHOLD = 300;
+    
+    // Fixed update button click handler
+    if (fixedUpdateBtn) {
+        fixedUpdateBtn.addEventListener('click', function() {
+            document.querySelector('form').submit();
+        });
+    }
+    
+    // Show/hide fixed bar on scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', function() {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function() {
+            if (window.scrollY > SCROLL_THRESHOLD) {
+                fixedUpdateBar.style.display = 'block';
+            } else {
+                fixedUpdateBar.style.display = 'none';
+            }
+        }, 100);
+    });
+    
+    // Dish search functionality
+    dishSearch.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+        filterDishes(query);
+    });
+    
+    clearDishSearchBtn.addEventListener('click', function() {
+        dishSearch.value = '';
+        filterDishes('');
+    });
+    
+    function filterDishes(query) {
+        const dishes = document.querySelectorAll('.dish-item');
+        const categories = document.querySelectorAll('.category-header');
+        const categoryContainers = document.querySelectorAll('.category-dishes');
+        let hasVisibleDishes = false;
+        
+        if (query === '') {
+            dishes.forEach(dish => dish.style.display = 'block');
+            categories.forEach(cat => cat.style.display = 'block');
+            categoryContainers.forEach(container => container.style.display = 'flex');
+            return;
+        }
+        
+        // Hide all categories first
+        categories.forEach(cat => cat.style.display = 'none');
+        categoryContainers.forEach(container => container.style.display = 'none');
+        
+        // Show matching dishes and their categories
+        const visibleCategories = new Set();
+        
+        dishes.forEach(function(dish) {
+            const dishName = dish.dataset.dishName || '';
+            const dishCategory = dish.dataset.dishCategory || '';
+            
+            if (dishName.includes(query) || dishCategory.includes(query)) {
+                dish.style.display = 'block';
+                visibleCategories.add(dishCategory);
+                hasVisibleDishes = true;
+            } else {
+                dish.style.display = 'none';
+            }
+        });
+        
+        // Show categories that have visible dishes
+        categories.forEach(function(cat) {
+            const category = cat.dataset.category || '';
+            if (visibleCategories.has(category)) {
+                cat.style.display = 'block';
+            }
+        });
+        
+        categoryContainers.forEach(function(container) {
+            const category = container.dataset.category || '';
+            if (visibleCategories.has(category)) {
+                container.style.display = 'flex';
+            }
+        });
+    }
     
     // Handle quantity buttons
     document.addEventListener('click', function(e) {

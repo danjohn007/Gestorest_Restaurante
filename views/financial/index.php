@@ -263,7 +263,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div>
                             <span class="badge bg-primary">
-                                <?= ucfirst(htmlspecialchars($payment['payment_method'])) ?>
+                                <?= ucfirst(htmlspecialchars($payment['payment_method'] ?? '')) ?>
                             </span>
                             <small class="text-muted">(<?= $payment['tickets_count'] ?> tickets)</small>
                         </div>
