@@ -107,6 +107,22 @@
             margin-top: 5px;
         }
         
+        .order-separator {
+            border-top: 1px dashed #666;
+            margin: 10px 0;
+            padding-top: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .order-subtotal {
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid #ccc;
+        }
+        
         .footer {
             text-align: center;
             margin-top: 20px;
@@ -205,7 +221,45 @@
         <?php
         // Mostrar todos los productos de todos los pedidos incluidos en el ticket
         $total_detalles = 0;
-        if (!empty($ticket['order_ids'])) {
+        if (!empty($ticket['order_ids']) && count($ticket['order_ids']) > 1) {
+            // Multiple orders - show subtotals by order/client
+            $orderCount = 0;
+            foreach ($ticket['order_ids'] as $orderId) {
+                if (!empty($ticket['orders_items'][$orderId])) {
+                    $orderCount++;
+                    $orderSubtotal = 0;
+                    
+                    // Show order separator for multiple orders
+                    if ($orderCount > 1) {
+                        echo '<div class="order-separator">--- Pedido #' . $orderId . ' ---</div>';
+                    }
+                    
+                    foreach ($ticket['orders_items'][$orderId] as $item) {
+                        $orderSubtotal += floatval($item['subtotal']);
+                        $total_detalles += floatval($item['subtotal']);
+        ?>
+            <div class="item-row">
+                <div class="item-name"><?= htmlspecialchars($item['dish_name']) ?></div>
+                <div class="item-qty"><?= $item['quantity'] ?></div>
+                <div class="item-price">$<?= number_format($item['unit_price'], 2) ?></div>
+                <div class="item-total">$<?= number_format($item['subtotal'], 2) ?></div>
+            </div>
+            <?php if (!empty($item['notes'])): ?>
+            <div class="item-notes">* <?= htmlspecialchars($item['notes']) ?></div>
+            <?php endif; ?>
+        <?php
+                    }
+                    // Show order subtotal
+        ?>
+            <div class="item-row order-subtotal">
+                <div class="item-name">Subtotal Pedido #<?= $orderId ?>:</div>
+                <div class="item-total">$<?= number_format($orderSubtotal, 2) ?></div>
+            </div>
+        <?php
+                }
+            }
+        } else if (!empty($ticket['order_ids'])) {
+            // Single order - show items normally
             foreach ($ticket['order_ids'] as $orderId) {
                 if (!empty($ticket['orders_items'][$orderId])) {
                     foreach ($ticket['orders_items'][$orderId] as $item) {

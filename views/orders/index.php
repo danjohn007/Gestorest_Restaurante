@@ -251,6 +251,14 @@
                                     <i class="bi bi-check-circle"></i>
                                 </a>
                                 <?php endif; ?>
+                                <?php if (in_array($order['status'], [ORDER_PENDING, ORDER_PREPARING])): ?>
+                                <a href="<?= BASE_URL ?>/orders/markAsReady/<?= $order['id'] ?>" 
+                                   class="btn btn-success btn-sm" 
+                                   title="Marcar como listo"
+                                   onclick="return confirm('¿Marcar este pedido como listo?')">
+                                    <i class="bi bi-check2-circle"></i>
+                                </a>
+                                <?php endif; ?>
                                 <?php if ($user['role'] === ROLE_ADMIN && $order['status'] !== ORDER_DELIVERED && $order['status'] !== ORDER_PENDING_CONFIRMATION): ?>
                                 <a href="<?= BASE_URL ?>/orders/edit/<?= $order['id'] ?>" 
                                    class="btn btn-edit-order btn-sm" 

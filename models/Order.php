@@ -430,7 +430,7 @@ class Order extends BaseModel {
         // Add search functionality
         if (isset($filters['search']) && !empty($filters['search'])) {
             $searchTerm = '%' . $filters['search'] . '%';
-            $query .= " AND (o.customer_name LIKE ? OR c.name LIKE ? OR c.phone LIKE ? OR c.email LIKE ? OR t.number LIKE ?)";
+            $query .= " AND (o.customer_name LIKE ? OR c.name LIKE ? OR c.phone LIKE ? OR c.email LIKE ? OR CAST(t.number AS CHAR) LIKE ?)";
             $params[] = $searchTerm;
             $params[] = $searchTerm;
             $params[] = $searchTerm;
