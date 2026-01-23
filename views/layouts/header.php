@@ -214,9 +214,9 @@
         
         <!-- Global Fixed New Order Button -->
         <?php 
-        // Get current URL path to hide button on create order page
+        // Get current URL path to hide button on create/edit order pages
         $currentPath = $_SERVER['REQUEST_URI'] ?? '';
-        $hideButton = strpos($currentPath, '/orders/create') !== false;
+        $hideButton = strpos($currentPath, '/orders/create') !== false || strpos($currentPath, '/orders/edit') !== false;
         if (!$hideButton): 
         ?>
         <a href="<?= BASE_URL ?>/orders/create" 

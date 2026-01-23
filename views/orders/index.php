@@ -119,7 +119,7 @@
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" action="<?= BASE_URL ?>/orders" class="row g-3 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="search" class="form-label">Buscar:</label>
                 <input type="text" 
                        class="form-control" 
@@ -128,13 +128,33 @@
                        placeholder="Cliente, teléfono, email, mesa..."
                        value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
+                <label for="table_filter" class="form-label">Filtrar por Mesa:</label>
+                <select class="form-select" id="table_filter" name="table_filter">
+                    <option value="">Todas las mesas</option>
+                    <?php 
+                    // Get unique table numbers from orders
+                    $tableNumbers = array_unique(array_column($orders, 'table_number'));
+                    sort($tableNumbers);
+                    foreach ($tableNumbers as $tableNum): 
+                        if (!empty($tableNum)):
+                    ?>
+                        <option value="<?= $tableNum ?>" <?= (($_GET['table_filter'] ?? '') == $tableNum) ? 'selected' : '' ?>>
+                            Mesa <?= $tableNum ?>
+                        </option>
+                    <?php 
+                        endif;
+                    endforeach; 
+                    ?>
+                </select>
+            </div>
+            <div class="col-md-3">
                 <button type="submit" class="btn btn-outline-primary">
                     <i class="bi bi-search"></i> Buscar
                 </button>
-                <?php if (!empty($_GET['search'])): ?>
+                <?php if (!empty($_GET['search']) || !empty($_GET['table_filter'])): ?>
                     <a href="<?= BASE_URL ?>/orders" class="btn btn-outline-secondary ms-1">
-                        <i class="bi bi-x"></i>
+                        <i class="bi bi-x"></i> Limpiar
                     </a>
                 <?php endif; ?>
             </div>

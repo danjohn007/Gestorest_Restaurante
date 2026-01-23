@@ -68,6 +68,11 @@ class OrdersController extends BaseController {
             $filters['search'] = $_GET['search'];
         }
         
+        // Add table filter
+        if (isset($_GET['table_filter']) && !empty($_GET['table_filter'])) {
+            $filters['table_number'] = $_GET['table_filter'];
+        }
+        
         if (!isset($orders)) {
             if ($showFuture) {
                 $orders = $this->orderModel->getFuturePickupOrders($filters);
@@ -612,9 +617,13 @@ class OrdersController extends BaseController {
                 $isPublicOrder = !empty($order['customer_name']) || !empty($order['customer_phone']);
                 $isPickup = $order['is_pickup'] ?? false;
             }
+            
+            // When editing, table_id validation is not required since we don't change it for non-public orders
+            // Table is only editable for public orders via the dropdown
+            return $errors; // Skip all validation for editing (notes don't need validation)
         }
         
-        // Table is required for internal orders and pickup orders
+        // Table is required for internal orders and pickup orders (only when creating)
         if (!$isPublicOrder || $isPickup) {
             $errors = $this->validateInput($data, [
                 'table_id' => ['required' => true]
