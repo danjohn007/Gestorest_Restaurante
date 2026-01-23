@@ -231,7 +231,7 @@
                     
                     // Show order separator for multiple orders
                     if ($orderCount > 1) {
-                        echo '<div class="order-separator">--- Pedido #' . $orderId . ' ---</div>';
+                        echo '<div class="order-separator">--- Pedido #' . htmlspecialchars($orderId) . ' ---</div>';
                     }
                     
                     foreach ($ticket['orders_items'][$orderId] as $item) {
@@ -252,7 +252,7 @@
                     // Show order subtotal
         ?>
             <div class="item-row order-subtotal">
-                <div class="item-name">Subtotal Pedido #<?= $orderId ?>:</div>
+                <div class="item-name">Subtotal Pedido #<?= htmlspecialchars($orderId) ?>:</div>
                 <div class="item-total">$<?= number_format($orderSubtotal, 2) ?></div>
             </div>
         <?php
