@@ -3,6 +3,7 @@ test_*.php
 test_database.sqlite
 config/test_*.php
 config/test_database.sqlite
+test-alerts.html
 
 # Development and testing
 node_modules/

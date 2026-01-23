@@ -177,8 +177,22 @@ class DashboardController extends BaseController {
         $this->requireAuth();
         $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
         
-        // Get timestamp from request (last check time)
+        // Get timestamp from request (last check time) with validation
         $lastCheck = $_GET['last_check'] ?? date('Y-m-d H:i:s', strtotime('-1 minute'));
+        
+        // Validate timestamp format (YYYY-MM-DD HH:MM:SS)
+        if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $lastCheck)) {
+            $lastCheck = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        }
+        
+        // Additional validation: ensure timestamp is not too old (max 1 hour ago) or in the future
+        $lastCheckTime = strtotime($lastCheck);
+        $now = time();
+        $oneHourAgo = $now - 3600;
+        
+        if ($lastCheckTime < $oneHourAgo || $lastCheckTime > $now) {
+            $lastCheck = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        }
         
         // Get new pending orders since last check
         $newOrders = $this->orderModel->getNewOrdersSince($lastCheck);

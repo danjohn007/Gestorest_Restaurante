@@ -10,29 +10,38 @@ class OrderAlertSystem {
         this.isPlaying = false;
         this.activeAlerts = new Set();
         this.audio = null;
+        this.audioContext = null;
         
         this.init();
     }
     
     init() {
-        // Create audio element with elegant notification sound
-        this.createAudioElement();
-        
         // Create alert container
         this.createAlertContainer();
         
         // Start polling for new orders
         this.startPolling();
+        
+        // Enable audio context on first user interaction
+        this.enableAudioOnInteraction();
     }
     
-    createAudioElement() {
-        // Use a pleasant notification sound frequency
-        // We'll use the Web Audio API to generate an elegant tone
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    enableAudioOnInteraction() {
+        const enableAudio = () => {
+            if (!this.audioContext) {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Remove listeners after first interaction
+            document.removeEventListener('click', enableAudio);
+            document.removeEventListener('keydown', enableAudio);
+        };
+        
+        document.addEventListener('click', enableAudio);
+        document.addEventListener('keydown', enableAudio);
     }
     
     playNotificationSound() {
-        if (this.isPlaying) return;
+        if (this.isPlaying || !this.audioContext) return;
         
         this.isPlaying = true;
         
@@ -90,6 +99,12 @@ class OrderAlertSystem {
         }
     }
     
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
     showAlert(order) {
         // Avoid duplicate alerts
         if (this.activeAlerts.has(order.id)) {
@@ -110,8 +125,12 @@ class OrderAlertSystem {
             background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%);
         `;
         
-        const tableName = order.table_number ? `Mesa ${order.table_number}` : 'Para llevar';
-        const waiterName = order.waiter_name || 'Sin asignar';
+        // Sanitize all user-provided data
+        const orderId = parseInt(order.id) || 0;
+        const tableName = order.table_number ? `Mesa ${this.escapeHtml(String(order.table_number))}` : 'Para llevar';
+        const waiterName = this.escapeHtml(order.waiter_name || 'Sin asignar');
+        const itemsCount = parseInt(order.items_count) || 0;
+        const createdAt = this.formatTime(order.created_at);
         
         alert.innerHTML = `
             <div class="d-flex align-items-center">
@@ -123,23 +142,23 @@ class OrderAlertSystem {
                         <i class="bi bi-exclamation-circle-fill"></i> ¡Nuevo Pedido Recibido!
                     </h5>
                     <p class="mb-1">
-                        <strong>Pedido #${order.id}</strong> - ${tableName}
+                        <strong>Pedido #${orderId}</strong> - ${tableName}
                     </p>
                     <small class="text-muted">
                         <i class="bi bi-person"></i> ${waiterName} | 
-                        <i class="bi bi-clock"></i> ${this.formatTime(order.created_at)} |
-                        <i class="bi bi-list"></i> ${order.items_count} items
+                        <i class="bi bi-clock"></i> ${createdAt} |
+                        <i class="bi bi-list"></i> ${itemsCount} items
                     </small>
                 </div>
                 <div class="flex-shrink-0 ms-3">
-                    <a href="${window.BASE_URL}/orders/show/${order.id}" 
+                    <a href="${window.BASE_URL}/orders/show/${orderId}" 
                        class="btn btn-warning btn-lg"
-                       onclick="orderAlertSystem.dismissAlert(${order.id})">
+                       onclick="orderAlertSystem.dismissAlert(${orderId})">
                         <i class="bi bi-eye"></i> Ver Pedido
                     </a>
                 </div>
             </div>
-            <button type="button" class="btn-close" onclick="orderAlertSystem.dismissAlert(${order.id})" 
+            <button type="button" class="btn-close" onclick="orderAlertSystem.dismissAlert(${orderId})" 
                     aria-label="Close"></button>
         `;
         
@@ -172,6 +191,11 @@ class OrderAlertSystem {
     }
     
     async checkNewOrders() {
+        // Skip check if page is not visible
+        if (document.hidden) {
+            return;
+        }
+        
         try {
             const response = await fetch(
                 `${window.BASE_URL}/dashboard/checkNewOrders?last_check=${encodeURIComponent(this.lastCheck)}`
