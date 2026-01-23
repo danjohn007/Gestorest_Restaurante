@@ -172,5 +172,39 @@ class DashboardController extends BaseController {
         
         $this->json($stats);
     }
+    
+    public function checkNewOrders() {
+        $this->requireAuth();
+        $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
+        
+        // Get timestamp from request (last check time) with validation
+        $lastCheck = $_GET['last_check'] ?? date('Y-m-d H:i:s', strtotime('-1 minute'));
+        
+        // Validate timestamp using DateTime for proper validation
+        $dateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $lastCheck);
+        
+        // Check if the date is valid and matches the input
+        if (!$dateTime || $dateTime->format('Y-m-d H:i:s') !== $lastCheck) {
+            $lastCheck = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        } else {
+            // Additional validation: ensure timestamp is not too old (max 1 hour ago) or in the future
+            $lastCheckTime = $dateTime->getTimestamp();
+            $now = time();
+            $oneHourAgo = $now - 3600;
+            
+            if ($lastCheckTime < $oneHourAgo || $lastCheckTime > $now) {
+                $lastCheck = date('Y-m-d H:i:s', strtotime('-1 minute'));
+            }
+        }
+        
+        // Get new pending orders since last check
+        $newOrders = $this->orderModel->getNewOrdersSince($lastCheck);
+        
+        $this->json([
+            'new_orders' => $newOrders,
+            'count' => count($newOrders),
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
 }
 ?>

@@ -628,5 +628,25 @@ class Order extends BaseModel {
         
         return $stmt->fetchAll();
     }
+    
+    public function getNewOrdersSince($timestamp) {
+        $query = "SELECT o.*, t.number as table_number, 
+                         u.name as waiter_name, w.employee_code,
+                         COUNT(oi.id) as items_count
+                  FROM {$this->table} o
+                  LEFT JOIN tables t ON o.table_id = t.id
+                  LEFT JOIN waiters w ON o.waiter_id = w.id
+                  LEFT JOIN users u ON w.user_id = u.id
+                  LEFT JOIN order_items oi ON o.id = oi.order_id
+                  WHERE o.created_at > ?
+                  AND o.status = ?
+                  GROUP BY o.id
+                  ORDER BY o.created_at DESC";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([$timestamp, ORDER_PENDING]);
+        
+        return $stmt->fetchAll();
+    }
 }
 ?>
