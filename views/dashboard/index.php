@@ -616,3 +616,28 @@ function getStatusText($status) {
     return $statusTexts[$status] ?? $status;
 }
 ?>
+
+<!-- Custom Dashboard Scripts -->
+<script>
+    // Update current time every second
+    setInterval(function() {
+        const now = new Date();
+        const formatted = now.toLocaleDateString('es-MX', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }) + ' ' + now.toLocaleTimeString('es-MX');
+        const timeElement = document.getElementById('current-time');
+        if (timeElement) {
+            timeElement.textContent = formatted;
+        }
+    }, 1000);
+    
+    // Set BASE_URL for JavaScript modules
+    window.BASE_URL = '<?= BASE_URL ?>';
+</script>
+
+<?php if (in_array($user['role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+<!-- Order Alert System for Admin and Cashier -->
+<script src="<?= BASE_URL ?>/public/js/order-alerts.js"></script>
+<?php endif; ?>

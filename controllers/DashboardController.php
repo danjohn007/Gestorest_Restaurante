@@ -172,5 +172,22 @@ class DashboardController extends BaseController {
         
         $this->json($stats);
     }
+    
+    public function checkNewOrders() {
+        $this->requireAuth();
+        $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
+        
+        // Get timestamp from request (last check time)
+        $lastCheck = $_GET['last_check'] ?? date('Y-m-d H:i:s', strtotime('-1 minute'));
+        
+        // Get new pending orders since last check
+        $newOrders = $this->orderModel->getNewOrdersSince($lastCheck);
+        
+        $this->json([
+            'new_orders' => $newOrders,
+            'count' => count($newOrders),
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
 }
 ?>
