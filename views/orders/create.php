@@ -697,7 +697,10 @@ document.addEventListener('DOMContentLoaded', function() {
             total += quantity * price;
         });
         
-        totalElement.textContent = '$' + total.toFixed(2);
+        // Update static total element if it exists
+        if (totalElement) {
+            totalElement.textContent = '$' + total.toFixed(2);
+        }
         
         // Update fixed bottom bar
         const fixedOrderTotal = document.getElementById('fixedOrderTotal');
