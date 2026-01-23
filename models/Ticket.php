@@ -675,11 +675,13 @@ class Ticket extends BaseModel {
         $ticket_number = $ticket['ticket_number'];
 
         // 3. Obtener todos los pedidos asociados a ese ticket_number con información del cliente
-        $stmt_orders = $this->db->prepare("SELECT o.*, COALESCE(c.name, o.customer_name, 'General') as customer_name 
-                                            FROM orders o 
-                                            JOIN tickets t ON t.order_id = o.id 
-                                            LEFT JOIN customers c ON o.customer_id = c.id
-                                            WHERE t.ticket_number = ?");
+        $stmt_orders = $this->db->prepare(
+            "SELECT o.*, COALESCE(c.name, o.customer_name, 'General') as customer_name 
+             FROM orders o 
+             JOIN tickets t ON t.order_id = o.id 
+             LEFT JOIN customers c ON o.customer_id = c.id
+             WHERE t.ticket_number = ?"
+        );
         $stmt_orders->execute([$ticket_number]);
         $orders = $stmt_orders->fetchAll(PDO::FETCH_ASSOC);
 

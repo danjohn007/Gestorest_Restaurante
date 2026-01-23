@@ -223,14 +223,12 @@
         $total_detalles = 0;
         if (!empty($ticket['order_ids']) && count($ticket['order_ids']) > 1) {
             // Multiple orders - check if we need to show customer names
-            $customers = [];
+            $customers = []; // Use associative array for O(1) lookup
             $orderCustomerMap = []; // Create a lookup map for efficiency
             foreach ($ticket['orders'] as $order) {
                 $customerName = $order['customer_name'] ?? 'General';
                 $orderCustomerMap[$order['id']] = $customerName;
-                if (!in_array($customerName, $customers)) {
-                    $customers[] = $customerName;
-                }
+                $customers[$customerName] = true; // O(1) insertion
             }
             
             // Show customer names only if there are multiple different customers
