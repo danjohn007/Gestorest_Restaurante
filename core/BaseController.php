@@ -80,7 +80,7 @@ abstract class BaseController {
         exit();
     }
     
-    protected function view($viewName, $data = []) {
+    public function view($viewName, $data = []) {
         // Extract data variables
         extract($data);
         
