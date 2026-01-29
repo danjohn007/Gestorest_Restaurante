@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sidebar - GestoRest</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="./public/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Mobile Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a class="sidebar-brand" href="#">
+                <i class="bi bi-shop"></i>
+                <span>Sistema GestoRest</span>
+            </a>
+        </div>
+        
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-gear"></i>
+                    <span>Administración</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-people"></i> Usuarios
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-person-badge"></i> Meseros
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-grid-3x3-gap"></i> Mesas
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-cup-hot"></i> Menú
+                    </a></li>
+                </ul>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-clipboard-check"></i>
+                    <span>Pedidos</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Layout de Mesas</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Reservaciones</span>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-receipt"></i>
+                    <span>Tickets</span>
+                </a>
+            </li>
+            
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-calculator"></i>
+                    <span>Financiero</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-graph-up"></i> Dashboard
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-credit-card"></i> Gastos
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-cash-coin"></i> Retiros
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-journal-check"></i> Corte de Caja
+                    </a></li>
+                </ul>
+            </li>
+            
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-boxes"></i>
+                    <span>Inventario</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-list"></i> Productos
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-arrow-up-down"></i> Movimientos
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-graph-up"></i> Reportes
+                    </a></li>
+                </ul>
+            </li>
+            
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-star-fill"></i>
+                    <span>Clientes</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-people"></i> Gestión de Clientes
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-trophy"></i> Mejores Comensales
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-currency-dollar"></i> Top por Consumo
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-people-fill"></i> Top por Visitas
+                    </a></li>
+                    <li><a class="dropdown-item" href="#">
+                        <i class="bi bi-bar-chart"></i> Reporte Completo
+                    </a></li>
+                </ul>
+            </li>
+        </ul>
+        
+        <!-- User Menu at Bottom -->
+        <div class="sidebar-user">
+            <ul class="sidebar-nav">
+                <li class="nav-item sidebar-dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Usuario Demo</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-person"></i> Mi Perfil
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-key"></i> Cambiar Contraseña
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="main-content-with-sidebar">
+        <div class="container-fluid">
+            <!-- Flash Message Example -->
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                ¡Bienvenido! El menú lateral ha sido implementado correctamente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Fixed New Order Button -->
+            <a href="#" class="btn btn-primary btn-lg shadow-lg fixed-new-order-btn" title="Crear Nuevo Pedido">
+                <i class="bi bi-plus-circle-fill"></i> Nuevo Pedido
+            </a>
+            
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">Bienvenido, Usuario Demo</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="text-muted">
+                        <i class="bi bi-clock"></i> <span id="current-time"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title text-muted mb-1">Total Mesas</h6>
+                                    <h3 class="mb-0">25</h3>
+                                </div>
+                                <div class="text-primary">
+                                    <i class="bi bi-grid-3x3-gap" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title text-muted mb-1">Ventas Diarias</h6>
+                                    <h3 class="mb-0">$15,500.00</h3>
+                                </div>
+                                <div class="text-success">
+                                    <i class="bi bi-currency-dollar" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title text-muted mb-1">Pedidos Pendientes</h6>
+                                    <h3 class="mb-0">8</h3>
+                                </div>
+                                <div class="text-warning">
+                                    <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card stat-card danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title text-muted mb-1">Pedidos Listos</h6>
+                                    <h3 class="mb-0">3</h3>
+                                </div>
+                                <div class="text-info">
+                                    <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Cards -->
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-pie-chart"></i> Estado de Mesas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge table-status status-disponible">Disponible</span>
+                                </div>
+                                <div>
+                                    <strong>15</strong> <small class="text-muted">(60%)</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge table-status status-ocupada">Ocupada</span>
+                                </div>
+                                <div>
+                                    <strong>8</strong> <small class="text-muted">(32%)</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <span class="badge table-status status-cuenta_solicitada">Cuenta Solicitada</span>
+                                </div>
+                                <div>
+                                    <strong>2</strong> <small class="text-muted">(8%)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-star"></i> Platillos Populares
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>Tacos al Pastor</strong><br>
+                                    <small class="text-muted">Platillos Fuertes</small>
+                                </div>
+                                <div class="text-end">
+                                    <div><strong>45</strong> vendidos</div>
+                                    <small class="text-muted">$85.00</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>Enchiladas Verdes</strong><br>
+                                    <small class="text-muted">Platillos Fuertes</small>
+                                </div>
+                                <div class="text-end">
+                                    <div><strong>32</strong> vendidos</div>
+                                    <small class="text-muted">$95.00</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong>Agua de Horchata</strong><br>
+                                    <small class="text-muted">Bebidas</small>
+                                </div>
+                                <div class="text-end">
+                                    <div><strong>28</strong> vendidos</div>
+                                    <small class="text-muted">$25.00</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-lightning"></i> Acciones Rápidas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2 mb-2">
+                                    <a href="#" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-grid-3x3-gap"></i><br>Gestionar Mesas
+                                    </a>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <a href="#" class="btn btn-outline-success w-100">
+                                        <i class="bi bi-cup-hot"></i><br>Gestionar Menú
+                                    </a>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <a href="#" class="btn btn-outline-info w-100">
+                                        <i class="bi bi-person-badge"></i><br>Gestionar Meseros
+                                    </a>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <a href="#" class="btn btn-outline-warning w-100">
+                                        <i class="bi bi-clipboard-check"></i><br>Ver Pedidos
+                                    </a>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <a href="#" class="btn btn-outline-secondary w-100">
+                                        <i class="bi bi-receipt"></i><br>Ver Tickets
+                                    </a>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <a href="#" class="btn btn-outline-dark w-100">
+                                        <i class="bi bi-person-plus"></i><br>Nuevo Usuario
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Custom JS -->
+    <script src="./public/js/app.js"></script>
+</body>
+</html>
