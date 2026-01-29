@@ -372,12 +372,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.addEventListener('msfullscreenchange', updateFullscreenButton);
         
         function updateFullscreenButton() {
-            const icon = fullscreenBtn.querySelector('i');
             if (document.fullscreenElement) {
-                icon.className = 'bi bi-fullscreen-exit';
                 fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> Salir Pantalla Completa';
             } else {
-                icon.className = 'bi bi-arrows-fullscreen';
                 fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Pantalla Completa';
             }
         }
