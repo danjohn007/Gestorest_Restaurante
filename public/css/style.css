@@ -412,11 +412,12 @@ body {
 /* Fixed action buttons */
 .fixed-new-order-btn {
     position: fixed;
-    top: 20px;
+    top: 50%;
     right: 30px;
     z-index: 1045;
     border-radius: 50px;
     padding: 15px 25px;
+    transform: translateY(-50%);
 }
 
 /* Sidebar Navigation Styles */
