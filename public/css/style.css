@@ -533,6 +533,15 @@ body {
     box-shadow: none;
     background: rgba(0, 0, 0, 0.1);
     border-radius: 0;
+    display: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.sidebar-dropdown.show .dropdown-menu {
+    display: block;
+    max-height: 500px;
 }
 
 .sidebar-dropdown .dropdown-item {
