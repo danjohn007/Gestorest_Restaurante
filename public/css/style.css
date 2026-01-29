@@ -630,10 +630,11 @@ body {
     }
     
     .fixed-new-order-btn {
-        top: 15px;
+        top: 50%;
         right: 15px;
         font-size: 0.9rem;
         padding: 12px 20px;
+        transform: translateY(-50%);
     }
     
     /* Overlay for mobile sidebar */
@@ -656,7 +657,8 @@ body {
 /* Desktop adjustments */
 @media (min-width: 992px) {
     .fixed-new-order-btn {
-        top: 20px;
+        top: 50%;
         right: 30px;
+        transform: translateY(-50%);
     }
 }
