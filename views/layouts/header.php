@@ -13,183 +13,199 @@
     <link href="<?= BASE_URL ?>/public/css/style.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Sidebar Navigation -->
     <?php if (isset($_SESSION['user_id'])): ?>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="<?= BASE_URL ?>/dashboard">
-                <i class="bi bi-shop"></i> <?= APP_NAME ?>
+    <!-- Mobile Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a class="sidebar-brand" href="<?= BASE_URL ?>/dashboard">
+                <i class="bi bi-shop"></i>
+                <span><?= APP_NAME ?></span>
             </a>
+        </div>
+        
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a class="nav-link" href="<?= BASE_URL ?>/dashboard">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <?php if ($_SESSION['user_role'] === ROLE_ADMIN): ?>
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-gear"></i>
+                    <span>Administración</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/users">
+                        <i class="bi bi-people"></i> Usuarios
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/waiters">
+                        <i class="bi bi-person-badge"></i> Meseros
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/tables">
+                        <i class="bi bi-grid-3x3-gap"></i> Mesas
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/dishes">
+                        <i class="bi bi-cup-hot"></i> Menú
+                    </a></li>
+                </ul>
+            </li>
+            <?php endif; ?>
             
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= BASE_URL ?>/dashboard">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    
+            <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_WAITER])): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="<?= BASE_URL ?>/orders">
+                    <i class="bi bi-clipboard-check"></i>
+                    <span>Pedidos</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_WAITER, ROLE_CASHIER])): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="<?= BASE_URL ?>/tables/layout">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Layout de Mesas</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="<?= BASE_URL ?>/reservations">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Reservaciones</span>
+                </a>
+            </li>
+            
+            <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="<?= BASE_URL ?>/tickets">
+                    <i class="bi bi-receipt"></i>
+                    <span>Tickets</span>
+                </a>
+            </li>
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-calculator"></i>
+                    <span>Financiero</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial">
+                        <i class="bi bi-graph-up"></i> Dashboard
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/expenses">
+                        <i class="bi bi-credit-card"></i> Gastos
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/withdrawals">
+                        <i class="bi bi-cash-coin"></i> Retiros
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/closures">
+                        <i class="bi bi-journal-check"></i> Corte de Caja
+                    </a></li>
                     <?php if ($_SESSION['user_role'] === ROLE_ADMIN): ?>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-gear"></i> Administración
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/users">
-                                <i class="bi bi-people"></i> Usuarios
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/waiters">
-                                <i class="bi bi-person-badge"></i> Meseros
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/tables">
-                                <i class="bi bi-grid-3x3-gap"></i> Mesas
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/dishes">
-                                <i class="bi bi-cup-hot"></i> Menú
-                            </a></li>
-                        </ul>
-                    </li>
-                    <?php endif; ?>
-                    
-                    <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_WAITER])): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= BASE_URL ?>/orders">
-                            <i class="bi bi-clipboard-check"></i> Pedidos
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    
-                    <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_WAITER, ROLE_CASHIER])): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= BASE_URL ?>/tables/layout">
-                            <i class="bi bi-diagram-3"></i> Layout de Mesas
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= BASE_URL ?>/reservations">
-                            <i class="bi bi-calendar-check"></i> Reservaciones
-                        </a>
-                    </li>
-                    
-                    <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= BASE_URL ?>/tickets">
-                            <i class="bi bi-receipt"></i> Tickets
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-calculator"></i> Financiero
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial">
-                                <i class="bi bi-graph-up"></i> Dashboard
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/expenses">
-                                <i class="bi bi-credit-card"></i> Gastos
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/withdrawals">
-                                <i class="bi bi-cash-coin"></i> Retiros
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/closures">
-                                <i class="bi bi-journal-check"></i> Corte de Caja
-                            </a></li>
-                            <?php if ($_SESSION['user_role'] === ROLE_ADMIN): ?>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/categories">
-                                <i class="bi bi-tags"></i> Categorías
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/branches">
-                                <i class="bi bi-building"></i> Sucursales
-                            </a></li>
-                            <?php endif; ?>
-                        </ul>
-                    </li>
-                    
-                    <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_SUPERADMIN, ROLE_CASHIER])): ?>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-boxes"></i> Inventario
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory">
-                                <i class="bi bi-list"></i> Productos
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory/movements">
-                                <i class="bi bi-arrow-up-down"></i> Movimientos
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory/report">
-                                <i class="bi bi-graph-up"></i> Reportes
-                            </a></li>
-                            <?php if ($_SESSION['user_role'] === ROLE_SUPERADMIN): ?>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory/settings">
-                                <i class="bi bi-gear"></i> Configuración
-                            </a></li>
-                            <?php endif; ?>
-                        </ul>
-                    </li>
-                    <?php endif; ?>
-                    
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-star-fill"></i> Clientes
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/customers">
-                                <i class="bi bi-people"></i> Gestión de Clientes
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners">
-                                <i class="bi bi-trophy"></i> Mejores Comensales
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners/bySpending">
-                                <i class="bi bi-currency-dollar"></i> Top por Consumo
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners/byVisits">
-                                <i class="bi bi-people-fill"></i> Top por Visitas
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners/report">
-                                <i class="bi bi-bar-chart"></i> Reporte Completo
-                            </a></li>
-                        </ul>
-                    </li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/categories">
+                        <i class="bi bi-tags"></i> Categorías
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/financial/branches">
+                        <i class="bi bi-building"></i> Sucursales
+                    </a></li>
                     <?php endif; ?>
                 </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['user_name']) ?>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/profile">
-                                <i class="bi bi-person"></i> Mi Perfil
-                            </a></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/auth/changePassword">
-                                <i class="bi bi-key"></i> Cambiar Contraseña
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="<?= BASE_URL ?>/auth/logout">
-                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                            </a></li>
-                        </ul>
-                    </li>
+            </li>
+            
+            <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_SUPERADMIN, ROLE_CASHIER])): ?>
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-boxes"></i>
+                    <span>Inventario</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory">
+                        <i class="bi bi-list"></i> Productos
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory/movements">
+                        <i class="bi bi-arrow-up-down"></i> Movimientos
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory/report">
+                        <i class="bi bi-graph-up"></i> Reportes
+                    </a></li>
+                    <?php if ($_SESSION['user_role'] === ROLE_SUPERADMIN): ?>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/inventory/settings">
+                        <i class="bi bi-gear"></i> Configuración
+                    </a></li>
+                    <?php endif; ?>
                 </ul>
-            </div>
+            </li>
+            <?php endif; ?>
+            
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-star-fill"></i>
+                    <span>Clientes</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/customers">
+                        <i class="bi bi-people"></i> Gestión de Clientes
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners">
+                        <i class="bi bi-trophy"></i> Mejores Comensales
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners/bySpending">
+                        <i class="bi bi-currency-dollar"></i> Top por Consumo
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners/byVisits">
+                        <i class="bi bi-people-fill"></i> Top por Visitas
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners/report">
+                        <i class="bi bi-bar-chart"></i> Reporte Completo
+                    </a></li>
+                </ul>
+            </li>
+            <?php endif; ?>
+        </ul>
+        
+        <!-- User Menu at Bottom -->
+        <div class="sidebar-user">
+            <ul class="sidebar-nav">
+                <li class="nav-item sidebar-dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle"></i>
+                        <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/profile">
+                            <i class="bi bi-person"></i> Mi Perfil
+                        </a></li>
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/auth/changePassword">
+                            <i class="bi bi-key"></i> Cambiar Contraseña
+                        </a></li>
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/auth/logout">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </nav>
     <?php endif; ?>
     
     <!-- Main Content -->
-    <main class="<?= isset($_SESSION['user_id']) ? 'container mt-4' : '' ?>">
+    <main class="<?= isset($_SESSION['user_id']) ? 'main-content-with-sidebar' : '' ?>">
+        <?php if (isset($_SESSION['user_id'])): ?>
+        <div class="container-fluid">
+        <?php endif; ?>
+        
         <!-- Flash Messages -->
         <?php 
         $flashTypes = ['success', 'error', 'warning', 'info'];

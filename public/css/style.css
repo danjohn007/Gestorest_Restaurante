@@ -412,9 +412,238 @@ body {
 /* Fixed action buttons */
 .fixed-new-order-btn {
     position: fixed;
-    bottom: 30px;
+    top: 20px;
     right: 30px;
-    z-index: 1050;
+    z-index: 1045;
     border-radius: 50px;
     padding: 15px 25px;
+}
+
+/* Sidebar Navigation Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+    padding: 0;
+    z-index: 1040;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+    padding: 20px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-brand {
+    color: white;
+    text-decoration: none;
+    font-size: 1.3rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-brand:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 15px 0;
+    margin: 0;
+}
+
+.sidebar-nav .nav-item {
+    margin: 5px 10px;
+}
+
+.sidebar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.sidebar-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.sidebar-nav .nav-link.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: 500;
+}
+
+.sidebar-nav .nav-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* Sidebar Dropdown */
+.sidebar-dropdown {
+    position: relative;
+}
+
+.sidebar-dropdown .dropdown-toggle {
+    cursor: pointer;
+    position: relative;
+}
+
+.sidebar-dropdown .dropdown-toggle::after {
+    content: '\f282';
+    font-family: 'bootstrap-icons';
+    position: absolute;
+    right: 15px;
+    transition: transform 0.3s;
+    border: none;
+    font-size: 0.8rem;
+}
+
+.sidebar-dropdown.show .dropdown-toggle::after {
+    transform: rotate(180deg);
+}
+
+.sidebar-dropdown .dropdown-menu {
+    position: static;
+    float: none;
+    width: 100%;
+    margin: 0;
+    padding: 5px 0;
+    border: none;
+    box-shadow: none;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+}
+
+.sidebar-dropdown .dropdown-item {
+    color: rgba(255, 255, 255, 0.85);
+    padding: 10px 15px 10px 50px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    border-radius: 0;
+}
+
+.sidebar-dropdown .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar-dropdown .dropdown-item i {
+    margin-right: 8px;
+    width: 18px;
+    text-align: center;
+}
+
+/* Sidebar user menu at bottom */
+.sidebar-user {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Main content with sidebar */
+.main-content-with-sidebar {
+    margin-left: 260px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.main-content-with-sidebar > .container,
+.main-content-with-sidebar > .container-fluid {
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Mobile hamburger button */
+.sidebar-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1050;
+    background: #0d6efd;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-toggle:hover {
+    background: #0a58ca;
+}
+
+.sidebar-toggle i {
+    font-size: 1.2rem;
+}
+
+/* Mobile styles */
+@media (max-width: 991px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .sidebar-toggle {
+        display: block;
+    }
+    
+    .main-content-with-sidebar {
+        margin-left: 0;
+        padding-top: 70px;
+    }
+    
+    .fixed-new-order-btn {
+        top: 15px;
+        right: 15px;
+        font-size: 0.9rem;
+        padding: 12px 20px;
+    }
+    
+    /* Overlay for mobile sidebar */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1035;
+        display: none;
+    }
+    
+    .sidebar-overlay.show {
+        display: block;
+    }
+}
+
+/* Desktop adjustments */
+@media (min-width: 992px) {
+    .fixed-new-order-btn {
+        top: 20px;
+        right: 30px;
+    }
 }

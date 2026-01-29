@@ -193,3 +193,73 @@ function updateClock() {
 // Update clock every second
 setInterval(updateClock, 1000);
 updateClock(); // Initial call
+
+// Sidebar functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    
+    if (sidebarToggle && sidebar && sidebarOverlay) {
+        // Toggle sidebar on button click
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+            sidebarOverlay.classList.toggle('show');
+        });
+        
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', function() {
+            sidebar.classList.remove('show');
+            sidebarOverlay.classList.remove('show');
+        });
+    }
+    
+    // Handle dropdown toggles in sidebar
+    const dropdownToggles = document.querySelectorAll('.sidebar-dropdown .dropdown-toggle');
+    dropdownToggles.forEach(function(toggle) {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.closest('.sidebar-dropdown');
+            const wasOpen = dropdown.classList.contains('show');
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.sidebar-dropdown.show').forEach(function(item) {
+                if (item !== dropdown) {
+                    item.classList.remove('show');
+                }
+            });
+            
+            // Toggle current dropdown
+            if (wasOpen) {
+                dropdown.classList.remove('show');
+            } else {
+                dropdown.classList.add('show');
+            }
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.sidebar-dropdown')) {
+            document.querySelectorAll('.sidebar-dropdown.show').forEach(function(dropdown) {
+                dropdown.classList.remove('show');
+            });
+        }
+    });
+    
+    // Highlight active menu item based on current URL
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.sidebar-nav .nav-link, .sidebar-nav .dropdown-item');
+    
+    navLinks.forEach(function(link) {
+        const href = link.getAttribute('href');
+        if (href && currentPath.includes(href)) {
+            link.classList.add('active');
+            // Open parent dropdown if this is a dropdown item
+            const dropdown = link.closest('.sidebar-dropdown');
+            if (dropdown) {
+                dropdown.classList.add('show');
+            }
+        }
+    });
+});
