@@ -9,7 +9,7 @@
         <a href="<?= BASE_URL ?>/orders/create" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Nuevo Pedido
         </a>
-        <a href="<?= BASE_URL ?>/orders/expired" class="btn btn-warning">
+        <a href="<?= BASE_URL ?>/orders/expiredOrders" class="btn btn-warning">
             <i class="bi bi-exclamation-triangle"></i> Pedidos Vencidos
         </a>
         <a href="<?= BASE_URL ?>/orders/future" class="btn btn-info">

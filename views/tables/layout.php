@@ -192,9 +192,14 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-diagram-3"></i> Layout de Mesas</h1>
-    <a href="<?= BASE_URL ?>/tables" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> Volver a Mesas
-    </a>
+    <div>
+        <button type="button" class="btn btn-info me-2" id="fullscreenBtn" title="Ver en pantalla completa">
+            <i class="bi bi-arrows-fullscreen"></i> Pantalla Completa
+        </button>
+        <a href="<?= BASE_URL ?>/tables" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a Mesas
+        </a>
+    </div>
 </div>
 
 <?php if (isset($error)): ?>
@@ -326,8 +331,54 @@ document.addEventListener('DOMContentLoaded', function() {
     const applyDimensionsBtn = document.getElementById('applyDimensions');
     const layoutWidthInput = document.getElementById('layoutWidth');
     const layoutHeightInput = document.getElementById('layoutHeight');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
     
     const isAdmin = <?= $user['role'] === ROLE_ADMIN ? 'true' : 'false' ?>;
+    
+    // Fullscreen functionality
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', function() {
+            const cardBody = layoutContainer.parentElement;
+            
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                if (cardBody.requestFullscreen) {
+                    cardBody.requestFullscreen();
+                } else if (cardBody.mozRequestFullScreen) { // Firefox
+                    cardBody.mozRequestFullScreen();
+                } else if (cardBody.webkitRequestFullscreen) { // Chrome, Safari and Opera
+                    cardBody.webkitRequestFullscreen();
+                } else if (cardBody.msRequestFullscreen) { // IE/Edge
+                    cardBody.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        });
+        
+        // Update button icon when entering/exiting fullscreen
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('msfullscreenchange', updateFullscreenButton);
+        
+        function updateFullscreenButton() {
+            if (document.fullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> Salir Pantalla Completa';
+            } else {
+                fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> Pantalla Completa';
+            }
+        }
+    }
     
     let draggedElement = null;
     let offsetX = 0;
