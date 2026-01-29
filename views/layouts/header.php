@@ -16,7 +16,7 @@
     <!-- Sidebar Navigation -->
     <?php if (isset($_SESSION['user_id'])): ?>
     <!-- Mobile Toggle Button -->
-    <button class="sidebar-toggle" id="sidebarToggle">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation menu">
         <i class="bi bi-list"></i>
     </button>
     
@@ -24,7 +24,7 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
+    <nav class="sidebar" id="sidebar" aria-label="Main navigation">
         <div class="sidebar-header">
             <a class="sidebar-brand" href="<?= BASE_URL ?>/dashboard">
                 <i class="bi bi-shop"></i>
@@ -42,7 +42,7 @@
             
             <?php if ($_SESSION['user_role'] === ROLE_ADMIN): ?>
             <li class="nav-item sidebar-dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle" href="#administracion" role="button">
                     <i class="bi bi-gear"></i>
                     <span>Administración</span>
                 </a>
@@ -96,7 +96,7 @@
                 </a>
             </li>
             <li class="nav-item sidebar-dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle" href="#financiero" role="button">
                     <i class="bi bi-calculator"></i>
                     <span>Financiero</span>
                 </a>
@@ -126,7 +126,7 @@
             
             <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_SUPERADMIN, ROLE_CASHIER])): ?>
             <li class="nav-item sidebar-dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle" href="#inventario" role="button">
                     <i class="bi bi-boxes"></i>
                     <span>Inventario</span>
                 </a>
@@ -150,7 +150,7 @@
             <?php endif; ?>
             
             <li class="nav-item sidebar-dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle" href="#clientes" role="button">
                     <i class="bi bi-star-fill"></i>
                     <span>Clientes</span>
                 </a>
@@ -179,7 +179,7 @@
         <div class="sidebar-user">
             <ul class="sidebar-nav">
                 <li class="nav-item sidebar-dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle" href="#usuario" role="button">
                         <i class="bi bi-person-circle"></i>
                         <span><?= htmlspecialchars($_SESSION['user_name']) ?></span>
                     </a>

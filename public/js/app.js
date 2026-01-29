@@ -251,14 +251,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('.sidebar-nav .nav-link, .sidebar-nav .dropdown-item');
     
-    navLinks.forEach(function(link) {
+    // Sort links by href length (longest first) to match most specific paths first
+    const sortedLinks = Array.from(navLinks).sort((a, b) => {
+        const hrefA = a.getAttribute('href') || '';
+        const hrefB = b.getAttribute('href') || '';
+        return hrefB.length - hrefA.length;
+    });
+    
+    let matchFound = false;
+    sortedLinks.forEach(function(link) {
         const href = link.getAttribute('href');
-        if (href && currentPath.includes(href)) {
-            link.classList.add('active');
-            // Open parent dropdown if this is a dropdown item
-            const dropdown = link.closest('.sidebar-dropdown');
-            if (dropdown) {
-                dropdown.classList.add('show');
+        if (href && !matchFound) {
+            // Exact match or path starts with href followed by / or end of string
+            if (currentPath === href || (currentPath.startsWith(href + '/') && href.length > 1)) {
+                link.classList.add('active');
+                // Open parent dropdown if this is a dropdown item
+                const dropdown = link.closest('.sidebar-dropdown');
+                if (dropdown) {
+                    dropdown.classList.add('show');
+                }
+                matchFound = true;
             }
         }
     });
