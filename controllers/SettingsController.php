@@ -28,7 +28,20 @@ class SettingsController extends BaseController {
         $fields = $_POST['fields'] ?? [];
         
         foreach ($fields as $key => $value) {
+            if (is_array($value)) {
+                $value = json_encode(array_values($value));
+            }
             $this->globalSettingModel->set($key, $value, $group);
+        }
+        
+        // For btn_pedidos group ensure both keys are persisted even when all checkboxes are unchecked
+        if ($group === 'btn_pedidos') {
+            if (!isset($fields['btn_pedidos_roles'])) {
+                $this->globalSettingModel->set('btn_pedidos_roles', '[]', $group);
+            }
+            if (!isset($fields['btn_pedidos_modules'])) {
+                $this->globalSettingModel->set('btn_pedidos_modules', '[]', $group);
+            }
         }
         
         $user = $this->getCurrentUser();
