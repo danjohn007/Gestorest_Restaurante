@@ -46,10 +46,13 @@
                 </select>
             </div>
             <?php endif; ?>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">
+            <div class="col-md-3 d-flex align-items-end gap-2 flex-wrap">
+                <button type="submit" class="btn btn-primary">
                     <i class="bi bi-funnel"></i> Filtrar
                 </button>
+                <a href="<?= BASE_URL ?>/financial?date_from=<?= date('Y-m-d') ?>&date_to=<?= date('Y-m-d') ?>" class="btn btn-info text-white" title="Ver solo el día de hoy">
+                    <i class="bi bi-calendar-day"></i> Hoy
+                </a>
                 <a href="<?= BASE_URL ?>/financial" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-clockwise"></i> Limpiar
                 </a>

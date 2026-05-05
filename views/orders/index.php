@@ -3,7 +3,13 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-clipboard-check"></i> 
-        <?= isset($showFuture) && $showFuture ? 'Pedidos Futuros' : 'Pedidos de Hoy' ?>
+        <?php if (isset($showFuture) && $showFuture): ?>
+            Pedidos Futuros
+        <?php elseif (!empty($selectedDate)): ?>
+            Pedidos del <?= date('d/m/Y', strtotime($selectedDate)) ?>
+        <?php else: ?>
+            Pedidos de Hoy
+        <?php endif; ?>
     </h1>
     <div>
         <a href="<?= BASE_URL ?>/orders/create" class="btn btn-primary">
@@ -143,6 +149,15 @@
                 </select>
             </div>
             <div class="col-md-3">
+                <label for="date_filter" class="form-label">Fecha:</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="date_filter" 
+                       name="date_filter"
+                       value="<?= htmlspecialchars($_GET['date_filter'] ?? '') ?>"
+                       title="Selecciona una fecha para ver pedidos de ese día">
+            </div>
+            <div class="col-md-3">
                 <button type="submit" class="btn btn-outline-primary">
                     <i class="bi bi-search"></i> Buscar
                 </button>
@@ -271,6 +286,14 @@
                                    title="Marcar como listo"
                                    onclick="return confirm('¿Marcar este pedido como listo?')">
                                     <i class="bi bi-check2-circle"></i>
+                                </a>
+                                <?php endif; ?>
+                                <?php if ($order['status'] === ORDER_READY && in_array($user['role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+                                <a href="<?= BASE_URL ?>/tickets/create?order_id=<?= $order['id'] ?>&table_id=<?= $order['table_id'] ?>" 
+                                   class="btn btn-warning btn-sm" 
+                                   title="Generar Ticket"
+                                   style="background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%) !important; border: none !important; color: white !important;">
+                                    <i class="bi bi-receipt-cutoff"></i>
                                 </a>
                                 <?php endif; ?>
                                 <?php if ($user['role'] === ROLE_ADMIN && $order['status'] !== ORDER_DELIVERED && $order['status'] !== ORDER_PENDING_CONFIRMATION): ?>

@@ -165,6 +165,7 @@ class TicketsController extends BaseController {
         
         $user = $this->getCurrentUser();
         $paymentMethod = !empty($_POST['payment_method']) ? $_POST['payment_method'] : null; // Allow null/empty payment method
+        $cashReceived = !empty($_POST['cash_received']) ? floatval($_POST['cash_received']) : null;
         
         try {
             // Check if we're creating a ticket for multiple orders or single order
@@ -211,12 +212,30 @@ class TicketsController extends BaseController {
                     $orderIds = array_map(function($order) { return $order['id']; }, $tableOrders);
                     $ticketId = $this->ticketModel->createTicketFromMultipleOrders($orderIds, $user['id'], $paymentMethod, $groupBy);
                     
+                    if ($cashReceived !== null && $paymentMethod === 'efectivo') {
+                        $ticket = $this->ticketModel->find($ticketId);
+                        $ticketTotal = $ticket['total'] ?? 0;
+                        $this->ticketModel->update($ticketId, [
+                            'cash_received' => $cashReceived,
+                            'change_amount' => $cashReceived - $ticketTotal
+                        ]);
+                    }
+                    
                     $this->redirect('tickets/show/' . $ticketId, 'success', 'Ticket generado correctamente');
                 }
             } else {
                 // Single order (backward compatibility)
                 $orderId = $_POST['order_id'];
                 $ticketId = $this->ticketModel->createTicket($orderId, $user['id'], $paymentMethod);
+                
+                if ($cashReceived !== null && $paymentMethod === 'efectivo') {
+                    $ticket = $this->ticketModel->find($ticketId);
+                    $ticketTotal = $ticket['total'] ?? 0;
+                    $this->ticketModel->update($ticketId, [
+                        'cash_received' => $cashReceived,
+                        'change_amount' => $cashReceived - $ticketTotal
+                    ]);
+                }
                 
                 $this->redirect('tickets/show/' . $ticketId, 'success', 'Ticket generado correctamente');
             }
