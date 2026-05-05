@@ -195,6 +195,57 @@
                         <?php endif; ?>
                     </div>
                     
+                    <div id="cashSection" class="mb-3" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label">Efectivo Recibido</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="cash_received" id="cashReceived" step="0.01" min="0">
+                            </div>
+                        </div>
+                        <div id="changeDisplay" class="alert alert-success d-none">
+                            <strong>Cambio a entregar: $<span id="changeAmount">0.00</span></strong>
+                        </div>
+                    </div>
+                    <script>
+                    (function() {
+                        var paymentSelect = document.getElementById('payment_method');
+                        var cashSection = document.getElementById('cashSection');
+                        var cashInput = document.getElementById('cashReceived');
+                        var changeDisplay = document.getElementById('changeDisplay');
+                        var changeAmount = document.getElementById('changeAmount');
+                        
+                        function toggleCashSection() {
+                            if (paymentSelect && paymentSelect.value === 'efectivo') {
+                                cashSection.style.display = 'block';
+                            } else {
+                                cashSection.style.display = 'none';
+                            }
+                        }
+                        
+                        function calculateChange() {
+                            var received = parseFloat(cashInput.value || 0);
+                            // Read total from the order summary element if rendered
+                            var totalEl = document.getElementById('previewTotal');
+                            var total = (totalEl && totalEl.dataset.total) ? parseFloat(totalEl.dataset.total) : 0;
+                            if (received > 0 && received >= total && total > 0) {
+                                changeDisplay.classList.remove('d-none');
+                                changeAmount.textContent = (received - total).toFixed(2);
+                            } else {
+                                changeDisplay.classList.add('d-none');
+                            }
+                        }
+                        
+                        if (paymentSelect) {
+                            paymentSelect.addEventListener('change', toggleCashSection);
+                            toggleCashSection();
+                        }
+                        if (cashInput) {
+                            cashInput.addEventListener('input', calculateChange);
+                        }
+                    })();
+                    </script>
+                    
                     <div class="card bg-light mb-3" id="ticketPreview" style="display: none;">
                         <div class="card-body">
                             <h6 class="card-title">Preview del Ticket</h6>

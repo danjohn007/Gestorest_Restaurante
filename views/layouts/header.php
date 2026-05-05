@@ -173,6 +173,35 @@
                 </ul>
             </li>
             <?php endif; ?>
+            
+            <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#servicios" role="button">
+                    <i class="bi bi-stars"></i>
+                    <span>Servicios</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/services">
+                        <i class="bi bi-list-ul"></i> Catálogo
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/services/sales">
+                        <i class="bi bi-cash-coin"></i> Registrar Venta
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/services/report">
+                        <i class="bi bi-graph-up"></i> Reportes
+                    </a></li>
+                </ul>
+            </li>
+            <?php endif; ?>
+            
+            <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_SUPERADMIN])): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="<?= BASE_URL ?>/settings">
+                    <i class="bi bi-sliders"></i>
+                    <span>Configuraciones</span>
+                </a>
+            </li>
+            <?php endif; ?>
         </ul>
         
         <!-- User Menu at Bottom -->

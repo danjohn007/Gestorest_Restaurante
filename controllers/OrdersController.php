@@ -73,9 +73,16 @@ class OrdersController extends BaseController {
             $filters['table_number'] = $_GET['table_filter'];
         }
         
+        // Add date filter
+        if (isset($_GET['date_filter']) && !empty($_GET['date_filter'])) {
+            $filters['date'] = $_GET['date_filter'];
+        }
+        
         if (!isset($orders)) {
             if ($showFuture) {
                 $orders = $this->orderModel->getFuturePickupOrders($filters);
+            } elseif (!empty($filters['date'])) {
+                $orders = $this->orderModel->getOrdersWithDetails($filters);
             } else {
                 $orders = $this->orderModel->getTodaysOrders($filters);
             }
@@ -92,7 +99,8 @@ class OrdersController extends BaseController {
             'orders' => $orders,
             'user' => $user,
             'showFuture' => $showFuture,
-            'tableNumbers' => $tableNumbers
+            'tableNumbers' => $tableNumbers,
+            'selectedDate' => $_GET['date_filter'] ?? null
         ]);
     }
     

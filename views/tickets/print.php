@@ -176,6 +176,10 @@
         <?php if (!empty($ticket['payment_method'])): ?>
         <div>Pago: <?= getPaymentMethodText($ticket['payment_method']) ?></div>
         <?php endif; ?>
+        <?php if (!empty($ticket['cash_received'])): ?>
+        <div>Efectivo Recibido: $<?= number_format($ticket['cash_received'], 2) ?></div>
+        <div>Cambio: $<?= number_format($ticket['change_amount'], 2) ?></div>
+        <?php endif; ?>
         <?php
         // Calcular totales reales sumando todos los productos
         $total = 0;

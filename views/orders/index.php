@@ -3,7 +3,13 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-clipboard-check"></i> 
-        <?= isset($showFuture) && $showFuture ? 'Pedidos Futuros' : 'Pedidos de Hoy' ?>
+        <?php if (isset($showFuture) && $showFuture): ?>
+            Pedidos Futuros
+        <?php elseif (!empty($selectedDate)): ?>
+            Pedidos del <?= date('d/m/Y', strtotime($selectedDate)) ?>
+        <?php else: ?>
+            Pedidos de Hoy
+        <?php endif; ?>
     </h1>
     <div>
         <a href="<?= BASE_URL ?>/orders/create" class="btn btn-primary">
@@ -77,6 +83,22 @@
     box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
 }
 
+.btn-ticket-generate {
+    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+    border: none;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(253, 126, 20, 0.3);
+}
+
+.btn-ticket-generate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(253, 126, 20, 0.4);
+    background: linear-gradient(135deg, #e8720c 0%, #e0a800 100%);
+    color: white;
+}
+
 /* Mejoras para la tabla */
 .table-hover tbody tr:hover {
     background-color: #f8f9fa;
@@ -141,6 +163,15 @@
                         </option>
                     <?php endforeach; ?>
                 </select>
+            </div>
+            <div class="col-md-3">
+                <label for="date_filter" class="form-label">Fecha:</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="date_filter" 
+                       name="date_filter"
+                       aria-label="Filtrar pedidos por fecha"
+                       value="<?= htmlspecialchars($_GET['date_filter'] ?? '') ?>">
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-outline-primary">
@@ -271,6 +302,13 @@
                                    title="Marcar como listo"
                                    onclick="return confirm('¿Marcar este pedido como listo?')">
                                     <i class="bi bi-check2-circle"></i>
+                                </a>
+                                <?php endif; ?>
+                                <?php if ($order['status'] === ORDER_READY && in_array($user['role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+                                <a href="<?= BASE_URL ?>/tickets/create?order_id=<?= $order['id'] ?>&table_id=<?= $order['table_id'] ?>" 
+                                   class="btn btn-ticket-generate btn-sm" 
+                                   title="Generar Ticket">
+                                    <i class="bi bi-receipt-cutoff"></i>
                                 </a>
                                 <?php endif; ?>
                                 <?php if ($user['role'] === ROLE_ADMIN && $order['status'] !== ORDER_DELIVERED && $order['status'] !== ORDER_PENDING_CONFIRMATION): ?>
