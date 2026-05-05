@@ -170,8 +170,8 @@
                        class="form-control" 
                        id="date_filter" 
                        name="date_filter"
-                       value="<?= htmlspecialchars($_GET['date_filter'] ?? '') ?>"
-                       title="Selecciona una fecha para ver pedidos de ese día">
+                       aria-label="Filtrar pedidos por fecha"
+                       value="<?= htmlspecialchars($_GET['date_filter'] ?? '') ?>">
             </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-outline-primary">

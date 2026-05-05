@@ -225,9 +225,9 @@
                         
                         function calculateChange() {
                             var received = parseFloat(cashInput.value || 0);
-                            // Try to read total from preview or ticket summary if available
+                            // Read total from the order summary element if rendered
                             var totalEl = document.getElementById('previewTotal');
-                            var total = totalEl ? parseFloat(totalEl.dataset.total || 0) : 0;
+                            var total = (totalEl && totalEl.dataset.total) ? parseFloat(totalEl.dataset.total) : 0;
                             if (received > 0 && received >= total && total > 0) {
                                 changeDisplay.classList.remove('d-none');
                                 changeAmount.textContent = (received - total).toFixed(2);
