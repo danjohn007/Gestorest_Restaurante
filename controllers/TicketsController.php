@@ -166,6 +166,7 @@ class TicketsController extends BaseController {
     }
 
 
+    public function delete($id) {
         $ticket = $this->ticketModel->find($id);
         if (!$ticket) {
             $this->redirect('tickets', 'error', 'Ticket no encontrado');

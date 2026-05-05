@@ -320,13 +320,17 @@
     </div>
     
     <div class="totals">
+        <?php
+        $printSubtotal = round($total_detalles / 1.16, 2);
+        $printTax      = round($total_detalles - $printSubtotal, 2);
+        ?>
         <div class="total-row">
             <div>Subtotal:</div>
-            <div>$<?= number_format(round($total_detalles / 1.16, 2), 2) ?></div>
+            <div>$<?= number_format($printSubtotal, 2) ?></div>
         </div>
         <div class="total-row">
             <div>IVA (16%):</div>
-            <div>$<?= number_format(round($total_detalles - round($total_detalles / 1.16, 2), 2), 2) ?></div>
+            <div>$<?= number_format($printTax, 2) ?></div>
         </div>
         <div class="total-row final-total">
             <div>TOTAL:</div>
