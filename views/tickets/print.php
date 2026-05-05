@@ -199,9 +199,6 @@
             $tax = round($total - $subtotal, 2);
         }
         ?>
-        <div><strong>Subtotal: $<?= number_format($subtotal, 2) ?></strong></div>
-        <div><strong>IVA (16%): $<?= number_format($tax, 2) ?></strong></div>
-        <div><strong>Total: $<?= number_format($total, 2) ?></strong></div>
     </div>
     
     <?php if (!empty($ticket['order_notes'])): ?>
@@ -317,7 +314,7 @@
         }
         ?>
         <div class="item-row final-total" style="border-top:2px solid #000; margin-top:10px;">
-            <div class="item-name">TOTAL DETALLES</div>
+            <div class="item-name">TOTAL</div>
             <div class="item-total" style="font-size:14px;">$<?= number_format($total_detalles, 2) ?></div>
         </div>
     </div>
@@ -325,16 +322,26 @@
     <div class="totals">
         <div class="total-row">
             <div>Subtotal:</div>
-            <div>$<?= number_format($subtotal, 2) ?></div>
+            <div>$<?= number_format(round($total_detalles / 1.16, 2), 2) ?></div>
         </div>
         <div class="total-row">
             <div>IVA (16%):</div>
-            <div>$<?= number_format($tax, 2) ?></div>
+            <div>$<?= number_format(round($total_detalles - round($total_detalles / 1.16, 2), 2), 2) ?></div>
         </div>
         <div class="total-row final-total">
             <div>TOTAL:</div>
-            <div>$<?= number_format($total, 2) ?></div>
+            <div>$<?= number_format($total_detalles, 2) ?></div>
         </div>
+        <?php if (!empty($ticket['cash_received'])): ?>
+        <div class="total-row">
+            <div>Efectivo:</div>
+            <div>$<?= number_format($ticket['cash_received'], 2) ?></div>
+        </div>
+        <div class="total-row">
+            <div>Cambio:</div>
+            <div>$<?= number_format($ticket['change_amount'] ?? 0, 2) ?></div>
+        </div>
+        <?php endif; ?>
     </div>
     
     <div class="footer">

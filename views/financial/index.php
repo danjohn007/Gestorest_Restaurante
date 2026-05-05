@@ -50,6 +50,10 @@
                 <button type="submit" class="btn btn-primary me-2">
                     <i class="bi bi-funnel"></i> Filtrar
                 </button>
+                <a href="<?= BASE_URL ?>/financial?date_from=<?= date('Y-m-d') ?>&date_to=<?= date('Y-m-d') ?>"
+                   class="btn btn-success me-2" title="Ver solo el día de hoy">
+                    <i class="bi bi-calendar-day"></i> HOY
+                </a>
                 <a href="<?= BASE_URL ?>/financial" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-clockwise"></i> Limpiar
                 </a>
@@ -66,12 +70,34 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title text-muted mb-1">Ingresos Totales</h6>
-                        <h3 class="mb-0 text-success">$<?= number_format($total_income['total_income'] ?? 0, 2) ?></h3>
-                        <small class="text-muted"><?= $total_income['total_tickets'] ?? 0 ?> tickets</small>
+                        <h3 class="mb-0 text-success">$<?= number_format(($total_income['total_income'] ?? 0) + ($service_sales_amount ?? 0), 2) ?></h3>
+                        <small class="text-muted"><?= $total_income['total_tickets'] ?? 0 ?> tickets + <?= $service_sales_records ?? 0 ?> servicios</small>
                     </div>
                     <div class="text-success">
                         <i class="bi bi-arrow-up-circle" style="font-size: 2rem;"></i>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted mb-1"><i class="bi bi-stars"></i> Servicios/Amenidades</h6>
+                        <h3 class="mb-0 text-info">$<?= number_format($service_sales_amount ?? 0, 2) ?></h3>
+                        <small class="text-muted"><?= $service_sales_records ?? 0 ?> ventas de servicios</small>
+                    </div>
+                    <div class="text-info">
+                        <i class="bi bi-stars" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+                <div class="mt-1">
+                    <a href="<?= BASE_URL ?>/services/sales?date=<?= $date_from ?>" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-list-ul"></i> Ver detalle
+                    </a>
                 </div>
             </div>
         </div>
@@ -114,7 +140,7 @@
     <div class="col-md-3 mb-3">
         <div class="card stat-card <?php 
             $totalWithdrawalAmount = $total_withdrawals['total_amount'] ?? 0;
-            $netProfit = ($total_income['total_income'] ?? 0) - $total_expense_amount - $totalWithdrawalAmount;
+            $netProfit = ($total_income['total_income'] ?? 0) + ($service_sales_amount ?? 0) - $total_expense_amount - $totalWithdrawalAmount;
             echo $netProfit >= 0 ? 'success' : 'warning';
         ?>">
             <div class="card-body">
@@ -123,12 +149,12 @@
                         <h6 class="card-title text-muted mb-1">Utilidad Neta</h6>
                         <h3 class="mb-0 <?php 
                             $totalWithdrawalAmount = $total_withdrawals['total_amount'] ?? 0;
-                            $netProfit = ($total_income['total_income'] ?? 0) - $total_expense_amount - $totalWithdrawalAmount;
+                            $netProfit = ($total_income['total_income'] ?? 0) + ($service_sales_amount ?? 0) - $total_expense_amount - $totalWithdrawalAmount;
                             echo $netProfit >= 0 ? 'text-success' : 'text-warning';
                         ?>">
                             $<?= number_format($netProfit, 2) ?>
                         </h3>
-                        <small class="text-muted">Ingresos - Gastos - Retiros</small>
+                        <small class="text-muted">Ingresos + Servicios - Gastos - Retiros</small>
                     </div>
                     <div class="<?php 
                         $totalWithdrawalAmount = $total_withdrawals['total_amount'] ?? 0;

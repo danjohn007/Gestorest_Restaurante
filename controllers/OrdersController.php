@@ -52,6 +52,11 @@ class OrdersController extends BaseController {
         // Check if we're showing future orders
         $showFuture = isset($_GET['future']) && $_GET['future'] == '1';
         
+        // Date filter for order history
+        $selectedDate = isset($_GET['date_filter']) && !empty($_GET['date_filter'])
+            ? $_GET['date_filter']
+            : date('Y-m-d');
+        
         // Filter by waiter for non-admin users
         if ($user['role'] === ROLE_WAITER) {
             $waiter = $this->waiterModel->findBy('user_id', $user['id']);
@@ -77,7 +82,7 @@ class OrdersController extends BaseController {
             if ($showFuture) {
                 $orders = $this->orderModel->getFuturePickupOrders($filters);
             } else {
-                $orders = $this->orderModel->getTodaysOrders($filters);
+                $orders = $this->orderModel->getOrdersByDate($selectedDate, $filters);
             }
         }
         
@@ -92,7 +97,8 @@ class OrdersController extends BaseController {
             'orders' => $orders,
             'user' => $user,
             'showFuture' => $showFuture,
-            'tableNumbers' => $tableNumbers
+            'tableNumbers' => $tableNumbers,
+            'selectedDate' => $selectedDate,
         ]);
     }
     

@@ -1,9 +1,17 @@
 <?php $title = 'Gestión de Pedidos'; ?>
 <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/orders.css">
 
+<?php
+// Determine page heading
+$headingDate = '';
+if (!empty($selectedDate) && $selectedDate !== date('Y-m-d')) {
+    $headingDate = ' — ' . date('d/m/Y', strtotime($selectedDate));
+}
+?>
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="bi bi-clipboard-check"></i> 
-        <?= isset($showFuture) && $showFuture ? 'Pedidos Futuros' : 'Pedidos de Hoy' ?>
+        <?= isset($showFuture) && $showFuture ? 'Pedidos Futuros' : 'Pedidos' . $headingDate ?>
     </h1>
     <div>
         <a href="<?= BASE_URL ?>/orders/create" class="btn btn-primary">
@@ -143,10 +151,20 @@
                 </select>
             </div>
             <div class="col-md-3">
+                <label for="date_filter" class="form-label">Fecha:</label>
+                <div class="input-group">
+                    <input type="date" class="form-control" id="date_filter" name="date_filter"
+                           value="<?= htmlspecialchars($selectedDate ?? date('Y-m-d')) ?>">
+                    <a href="<?= BASE_URL ?>/orders" class="btn btn-outline-secondary" title="Hoy">
+                        <i class="bi bi-calendar-day"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <button type="submit" class="btn btn-outline-primary">
                     <i class="bi bi-search"></i> Buscar
                 </button>
-                <?php if (!empty($_GET['search']) || !empty($_GET['table_filter'])): ?>
+                <?php if (!empty($_GET['search']) || !empty($_GET['table_filter']) || (!empty($_GET['date_filter']) && $_GET['date_filter'] !== date('Y-m-d'))): ?>
                     <a href="<?= BASE_URL ?>/orders" class="btn btn-outline-secondary ms-1">
                         <i class="bi bi-x"></i> Limpiar
                     </a>
@@ -258,6 +276,14 @@
                                    title="👁️ Ver detalles completos">
                                     <i class="bi bi-eye-fill"></i>
                                 </a>
+                                <?php if ($order['status'] === ORDER_READY && in_array($user['role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+                                <a href="<?= BASE_URL ?>/tickets/createFromOrder/<?= $order['id'] ?>" 
+                                   class="btn btn-warning btn-sm" 
+                                   title="🎫 Generar Ticket"
+                                   onclick="return confirm('¿Generar ticket para este pedido?')">
+                                    <i class="bi bi-receipt-cutoff"></i>
+                                </a>
+                                <?php endif; ?>
                                 <?php if ($order['status'] === ORDER_PENDING_CONFIRMATION && ($user['role'] === ROLE_ADMIN || $user['role'] === ROLE_CASHIER)): ?>
                                 <a href="<?= BASE_URL ?>/orders/confirmPublicOrder/<?= $order['id'] ?>" 
                                    class="btn btn-success btn-sm" 

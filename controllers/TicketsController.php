@@ -105,7 +105,67 @@ class TicketsController extends BaseController {
         ]);
     }
     
-    public function delete($id) {
+    /**
+     * Quick-create ticket directly from an order on the orders list page.
+     * The order must be in "listo" (ready) status.
+     */
+    public function createFromOrder($orderId) {
+        $user = $this->getCurrentUser();
+        
+        if (!in_array($user['role'], [ROLE_CASHIER, ROLE_ADMIN])) {
+            $this->redirect('orders', 'error', 'No tienes permisos para generar tickets');
+            return;
+        }
+        
+        $order = $this->orderModel->find($orderId);
+        if (!$order) {
+            $this->redirect('orders', 'error', 'Pedido no encontrado');
+            return;
+        }
+        
+        if ($order['status'] !== ORDER_READY) {
+            $this->redirect('orders', 'error', 'El pedido debe estar en estado "Listo" para generar el ticket');
+            return;
+        }
+        
+        // Check if ticket already exists
+        $existingTicket = $this->ticketModel->findBy('order_id', $orderId);
+        if ($existingTicket) {
+            $this->redirect('tickets/show/' . $existingTicket['id'], 'info', 'Este pedido ya tiene un ticket generado');
+            return;
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $paymentMethod = !empty($_POST['payment_method']) ? $_POST['payment_method'] : null;
+            
+            try {
+                $ticketId = $this->ticketModel->createTicket($orderId, $user['id'], $paymentMethod);
+                
+                // Save cash received and change if efectivo
+                if ($paymentMethod === 'efectivo' && !empty($_POST['cash_received'])) {
+                    $cashReceived = floatval($_POST['cash_received']);
+                    $ticketTotal  = floatval($order['total']);
+                    $changeAmount = max(0, $cashReceived - $ticketTotal);
+                    $this->ticketModel->update($ticketId, [
+                        'cash_received' => $cashReceived,
+                        'change_amount' => $changeAmount,
+                    ]);
+                }
+                
+                $this->redirect('tickets/show/' . $ticketId, 'success', 'Ticket generado correctamente');
+            } catch (Exception $e) {
+                $this->redirect('orders', 'error', 'Error al generar el ticket: ' . $e->getMessage());
+            }
+        } else {
+            // Show quick ticket creation form
+            $this->view('tickets/create_from_order', [
+                'order' => $order,
+                'user'  => $user,
+            ]);
+        }
+    }
+
+
         $ticket = $this->ticketModel->find($id);
         if (!$ticket) {
             $this->redirect('tickets', 'error', 'Ticket no encontrado');
@@ -211,6 +271,7 @@ class TicketsController extends BaseController {
                     $orderIds = array_map(function($order) { return $order['id']; }, $tableOrders);
                     $ticketId = $this->ticketModel->createTicketFromMultipleOrders($orderIds, $user['id'], $paymentMethod, $groupBy);
                     
+                    $this->saveCashData($ticketId, $paymentMethod);
                     $this->redirect('tickets/show/' . $ticketId, 'success', 'Ticket generado correctamente');
                 }
             } else {
@@ -218,6 +279,7 @@ class TicketsController extends BaseController {
                 $orderId = $_POST['order_id'];
                 $ticketId = $this->ticketModel->createTicket($orderId, $user['id'], $paymentMethod);
                 
+                $this->saveCashData($ticketId, $paymentMethod);
                 $this->redirect('tickets/show/' . $ticketId, 'success', 'Ticket generado correctamente');
             }
         } catch (Exception $e) {
@@ -316,6 +378,19 @@ class TicketsController extends BaseController {
         return $this->orderModel->getOrdersReadyForTicket();
     }
     
+    private function saveCashData($ticketId, $paymentMethod) {
+        if ($paymentMethod === 'efectivo' && !empty($_POST['cash_received'])) {
+            $ticket      = $this->ticketModel->find($ticketId);
+            $cashReceived = floatval($_POST['cash_received']);
+            $ticketTotal  = $ticket ? floatval($ticket['total']) : 0;
+            $changeAmount = max(0, $cashReceived - $ticketTotal);
+            $this->ticketModel->update($ticketId, [
+                'cash_received' => $cashReceived,
+                'change_amount' => $changeAmount,
+            ]);
+        }
+    }
+
     private function getSalesReportData($startDate, $endDate) {
         return $this->ticketModel->getSalesReportData($startDate, $endDate);
     }

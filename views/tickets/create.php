@@ -194,8 +194,36 @@
                             </div>
                         <?php endif; ?>
                     </div>
-                    
-                    <div class="card bg-light mb-3" id="ticketPreview" style="display: none;">
+
+                    <!-- Cash received / change section (efectivo only) -->
+                    <div id="cashChangeSection" class="mb-3" style="display:none;">
+                        <div class="card border-success bg-light">
+                            <div class="card-body py-2">
+                                <h6 class="mb-2"><i class="bi bi-cash-coin"></i> Efectivo Recibido</h6>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-6">
+                                        <label class="form-label small mb-1">💵 Cantidad Recibida</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" name="cash_received"
+                                                   id="cashReceivedInput" step="0.01" min="0"
+                                                   value="<?= htmlspecialchars($old['cash_received'] ?? '') ?>"
+                                                   placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small mb-1">Cambio a Devolver</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="text" class="form-control fw-bold text-danger"
+                                                   id="changeAmountDisplay" readonly value="0.00">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                         <div class="card-body">
                             <h6 class="card-title">Preview del Ticket</h6>
                             <div id="previewContent">
@@ -459,6 +487,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedTable = document.querySelector('input[name="table_id"]:checked');
     if (selectedTable) {
         selectedTable.dispatchEvent(new Event('change'));
+    }
+
+    // ---- Cash change calculator ----
+    const paymentMethodSelect = document.getElementById('payment_method');
+    const cashChangeSection   = document.getElementById('cashChangeSection');
+    const cashReceivedInput   = document.getElementById('cashReceivedInput');
+    const changeAmountDisplay = document.getElementById('changeAmountDisplay');
+
+    function getCurrentTotal() {
+        // Try to get total from preview
+        const totalEl = document.querySelector('#previewContent .col-6.text-end strong');
+        if (totalEl) {
+            return parseFloat(totalEl.textContent.replace('$', '')) || 0;
+        }
+        return 0;
+    }
+
+    function updateCashChange() {
+        const total  = getCurrentTotal();
+        const cash   = parseFloat(cashReceivedInput ? cashReceivedInput.value : 0) || 0;
+        const change = cash - total;
+        if (changeAmountDisplay) {
+            changeAmountDisplay.value = change >= 0 ? change.toFixed(2) : '0.00';
+            changeAmountDisplay.className = 'form-control fw-bold ' + (change >= 0 ? 'text-success' : 'text-danger');
+        }
+    }
+
+    function toggleCashSection() {
+        if (cashChangeSection && paymentMethodSelect) {
+            cashChangeSection.style.display = paymentMethodSelect.value === 'efectivo' ? 'block' : 'none';
+        }
+    }
+
+    if (paymentMethodSelect) {
+        paymentMethodSelect.addEventListener('change', function() {
+            toggleCashSection();
+            updateCashChange();
+        });
+        toggleCashSection();
+    }
+    if (cashReceivedInput) {
+        cashReceivedInput.addEventListener('input', updateCashChange);
     }
 });
 </script>

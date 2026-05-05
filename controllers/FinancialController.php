@@ -6,6 +6,7 @@ class FinancialController extends BaseController {
     private $cashWithdrawalModel;
     private $cashClosureModel;
     private $ticketModel;
+    private $serviceSaleModel;
     
     public function __construct() {
         parent::__construct();
@@ -17,6 +18,7 @@ class FinancialController extends BaseController {
         $this->cashWithdrawalModel = new CashWithdrawal();
         $this->cashClosureModel = new CashClosure();
         $this->ticketModel = new Ticket();
+        $this->serviceSaleModel = new ServiceSale();
     }
     
     // Dashboard financiero
@@ -54,6 +56,10 @@ class FinancialController extends BaseController {
         $totalWithdrawals = $this->cashWithdrawalModel->getTotalWithdrawals($dateFrom, $dateTo, $branchId);
         $withdrawalsByDate = $this->cashWithdrawalModel->getWithdrawalsByDateRange($dateFrom, $dateTo, $branchId);
         
+        // Service sales income for the date range
+        $serviceSalesTotal = $this->serviceSaleModel->getTotalByDateRange($dateFrom, $dateTo);
+        $serviceSalesAmount = (float)($serviceSalesTotal['total_sales'] ?? 0);
+        
         // Estadísticas de sucursales si es admin
         $branches = [];
         if ($user['role'] === ROLE_ADMIN) {
@@ -75,6 +81,8 @@ class FinancialController extends BaseController {
             'total_expense_amount' => $totalExpenseAmount,
             'total_withdrawals' => $totalWithdrawals,
             'withdrawals_by_date' => $withdrawalsByDate,
+            'service_sales_amount' => $serviceSalesAmount,
+            'service_sales_records' => $serviceSalesTotal['total_records'] ?? 0,
             'branches' => $branches,
             'date_from' => $dateFrom,
             'date_to' => $dateTo,

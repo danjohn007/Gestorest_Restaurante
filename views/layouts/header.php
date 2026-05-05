@@ -40,6 +40,15 @@
                 </a>
             </li>
             
+            <?php if (in_array($_SESSION['user_role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
+            <li class="nav-item">
+                <a class="nav-link" href="<?= BASE_URL ?>/services">
+                    <i class="bi bi-stars"></i>
+                    <span>Servicios</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            
             <?php if ($_SESSION['user_role'] === ROLE_ADMIN): ?>
             <li class="nav-item sidebar-dropdown">
                 <a class="nav-link dropdown-toggle" href="#administracion" role="button">
@@ -169,6 +178,26 @@
                     </a></li>
                     <li><a class="dropdown-item" href="<?= BASE_URL ?>/best_diners/report">
                         <i class="bi bi-bar-chart"></i> Reporte Completo
+                    </a></li>
+                </ul>
+            </li>
+            <?php endif; ?>
+            
+            <?php if ($_SESSION['user_role'] === ROLE_ADMIN): ?>
+            <li class="nav-item sidebar-dropdown">
+                <a class="nav-link dropdown-toggle" href="#configuraciones" role="button">
+                    <i class="bi bi-sliders"></i>
+                    <span>Configuraciones</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/settings">
+                        <i class="bi bi-gear-wide-connected"></i> Config. Globales
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/settings/logs">
+                        <i class="bi bi-journal-text"></i> Bitácora de Acciones
+                    </a></li>
+                    <li><a class="dropdown-item" href="<?= BASE_URL ?>/settings/errorLogs">
+                        <i class="bi bi-bug"></i> Registro de Errores
                     </a></li>
                 </ul>
             </li>

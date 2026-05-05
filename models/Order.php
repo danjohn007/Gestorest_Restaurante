@@ -402,8 +402,10 @@ class Order extends BaseModel {
     }
     
     public function getTodaysOrders($filters = []) {
-        $today = date('Y-m-d');
-        
+        return $this->getOrdersByDate(date('Y-m-d'), $filters);
+    }
+
+    public function getOrdersByDate($date, $filters = []) {
         $query = "SELECT o.*, t.number as table_number, 
                          u.name as waiter_name, w.employee_code,
                          c.name as customer_name, c.phone as customer_phone, c.email as customer_email,
@@ -417,7 +419,7 @@ class Order extends BaseModel {
                   LEFT JOIN order_items oi ON o.id = oi.order_id
                   WHERE (DATE(o.created_at) = ? OR (o.is_pickup = 1 AND DATE(o.pickup_datetime) = ?))";
         
-        $params = [$today, $today];
+        $params = [$date, $date];
         
         if (isset($filters['waiter_id'])) {
             $query .= " AND o.waiter_id = ?";
@@ -453,7 +455,7 @@ class Order extends BaseModel {
         
         return $stmt->fetchAll();
     }
-    
+
     public function createPublicOrderWithCustomer($orderData, $items, $customerData) {
         try {
             $this->db->beginTransaction();
