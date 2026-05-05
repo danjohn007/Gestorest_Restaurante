@@ -25,7 +25,7 @@
                 <form method="POST" action="<?= BASE_URL ?>/services/registerSale" id="saleForm">
                     <div class="mb-3">
                         <label class="form-label">Servicio *</label>
-                        <select class="form-select" name="service_id" id="serviceSelect" required onchange="updatePrice()">
+                        <select class="form-select" name="service_id" id="serviceSelect" required>
                             <option value="">Seleccionar servicio...</option>
                             <?php foreach ($services as $service): ?>
                             <option value="<?= $service['id'] ?>" data-price="<?= $service['price'] ?>">
@@ -36,7 +36,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Cantidad *</label>
-                        <input type="number" class="form-control" name="quantity" id="quantity" value="1" min="1" required onchange="calculateTotal()">
+                        <input type="number" class="form-control" name="quantity" id="quantity" value="1" min="1" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Total</label>
@@ -47,7 +47,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Método de Pago *</label>
-                        <select class="form-select" name="payment_method" id="paymentMethod" required onchange="toggleCash()">
+                        <select class="form-select" name="payment_method" id="paymentMethod" required>
                             <option value="efectivo">Efectivo</option>
                             <option value="tarjeta">Tarjeta</option>
                             <option value="transferencia">Transferencia</option>
@@ -57,7 +57,7 @@
                         <label class="form-label">Efectivo Recibido</label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" name="cash_received" id="cashReceived" step="0.01" min="0" onchange="calculateChange()">
+                            <input type="number" class="form-control" name="cash_received" id="cashReceived" step="0.01" min="0">
                         </div>
                         <div id="changeDisplay" class="mt-2 d-none">
                             <span class="text-success fw-bold">Cambio: $<span id="changeAmount">0.00</span></span>
@@ -72,6 +72,7 @@
                     </button>
                 </form>
                 <script>
+                (function() {
                 var servicePrice = 0;
                 function updatePrice() {
                     var select = document.getElementById('serviceSelect');
@@ -109,8 +110,13 @@
                         changeDisplay.classList.add('d-none');
                     }
                 }
+                document.getElementById('serviceSelect').addEventListener('change', updatePrice);
+                document.getElementById('quantity').addEventListener('change', calculateTotal);
+                document.getElementById('paymentMethod').addEventListener('change', toggleCash);
+                document.getElementById('cashReceived').addEventListener('input', calculateChange);
                 // Init
                 toggleCash();
+                })();
                 </script>
                 <?php endif; ?>
             </div>

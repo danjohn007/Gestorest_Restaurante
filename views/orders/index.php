@@ -83,6 +83,22 @@
     box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
 }
 
+.btn-ticket-generate {
+    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+    border: none;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(253, 126, 20, 0.3);
+}
+
+.btn-ticket-generate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(253, 126, 20, 0.4);
+    background: linear-gradient(135deg, #e8720c 0%, #e0a800 100%);
+    color: white;
+}
+
 /* Mejoras para la tabla */
 .table-hover tbody tr:hover {
     background-color: #f8f9fa;
@@ -290,9 +306,8 @@
                                 <?php endif; ?>
                                 <?php if ($order['status'] === ORDER_READY && in_array($user['role'], [ROLE_ADMIN, ROLE_CASHIER])): ?>
                                 <a href="<?= BASE_URL ?>/tickets/create?order_id=<?= $order['id'] ?>&table_id=<?= $order['table_id'] ?>" 
-                                   class="btn btn-warning btn-sm" 
-                                   title="Generar Ticket"
-                                   style="background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%) !important; border: none !important; color: white !important;">
+                                   class="btn btn-ticket-generate btn-sm" 
+                                   title="Generar Ticket">
                                     <i class="bi bi-receipt-cutoff"></i>
                                 </a>
                                 <?php endif; ?>
