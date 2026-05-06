@@ -60,4 +60,18 @@ class ServiceSale extends BaseModel {
         $stmt->execute([$dateFrom, $dateTo]);
         return $stmt->fetchAll();
     }
+
+    public function getIncomeByPaymentMethod($dateFrom, $dateTo) {
+        $stmt = $this->db->prepare(
+            "SELECT payment_method,
+                    COUNT(*) as services_count,
+                    COALESCE(SUM(total), 0) as total_income
+             FROM {$this->table}
+             WHERE DATE(created_at) BETWEEN ? AND ?
+             GROUP BY payment_method
+             ORDER BY total_income DESC"
+        );
+        $stmt->execute([$dateFrom, $dateTo]);
+        return $stmt->fetchAll();
+    }
 }

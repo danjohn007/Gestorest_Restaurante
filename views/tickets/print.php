@@ -203,9 +203,6 @@
             $tax = round($total - $subtotal, 2);
         }
         ?>
-        <div><strong>Subtotal: $<?= number_format($subtotal, 2) ?></strong></div>
-        <div><strong>IVA (16%): $<?= number_format($tax, 2) ?></strong></div>
-        <div><strong>Total: $<?= number_format($total, 2) ?></strong></div>
     </div>
     
     <?php if (!empty($ticket['order_notes'])): ?>
