@@ -27,20 +27,26 @@ class SettingsController extends BaseController {
         $group = $_POST['group'] ?? 'general';
         $fields = $_POST['fields'] ?? [];
         
-        foreach ($fields as $key => $value) {
-            if (is_array($value)) {
-                $value = json_encode(array_values($value));
-            }
-            $this->globalSettingModel->set($key, $value, $group);
-        }
-        
-        // For btn_pedidos group ensure both keys are persisted even when all checkboxes are unchecked
         if ($group === 'btn_pedidos') {
-            if (!isset($fields['btn_pedidos_roles'])) {
-                $this->globalSettingModel->set('btn_pedidos_roles', '[]', $group);
+            // Build the per-role/per-module config and persist it as a single JSON entry.
+            // All known roles are iterated so that unchecked roles result in an empty module list.
+            $allRoles = [ROLE_ADMIN, ROLE_WAITER, ROLE_CASHIER, ROLE_SUPERADMIN];
+            $submitted = isset($fields['btn_pedidos_config']) && is_array($fields['btn_pedidos_config'])
+                ? $fields['btn_pedidos_config']
+                : [];
+            $config = [];
+            foreach ($allRoles as $role) {
+                $config[$role] = (isset($submitted[$role]) && is_array($submitted[$role]))
+                    ? array_values($submitted[$role])
+                    : [];
             }
-            if (!isset($fields['btn_pedidos_modules'])) {
-                $this->globalSettingModel->set('btn_pedidos_modules', '[]', $group);
+            $this->globalSettingModel->set('btn_pedidos_config', json_encode($config), $group);
+        } else {
+            foreach ($fields as $key => $value) {
+                if (is_array($value)) {
+                    $value = json_encode(array_values($value));
+                }
+                $this->globalSettingModel->set($key, $value, $group);
             }
         }
         

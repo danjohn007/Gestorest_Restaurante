@@ -373,12 +373,11 @@
                 <div class="card">
                     <div class="card-header"><h5 class="mb-0"><i class="bi bi-toggles"></i> Mostrar Botón Pedidos</h5></div>
                     <div class="card-body">
-                        <p class="text-muted mb-4">Configure en qué módulos y para qué roles de usuario se muestra el botón flotante <strong>"Nuevo Pedido"</strong>.</p>
+                        <p class="text-muted mb-4">Configure en qué módulos se muestra el botón flotante <strong>"Nuevo Pedido"</strong> para cada rol de usuario.</p>
                         <form method="POST" action="<?= BASE_URL ?>/settings/save">
                             <input type="hidden" name="group" value="btn_pedidos">
 
                             <?php
-                            // Define options first so defaults can use array_keys (single source of truth)
                             $roleOptions = [
                                 ROLE_ADMIN      => '<i class="bi bi-shield-fill"></i> Administrador',
                                 ROLE_WAITER     => '<i class="bi bi-person-badge"></i> Mesero',
@@ -401,48 +400,48 @@
                                 'dishes'       => '<i class="bi bi-cup-hot"></i> Menú / Platillos',
                                 'settings'     => '<i class="bi bi-sliders"></i> Configuraciones',
                             ];
+                            $allModules = array_keys($moduleOptions);
 
-                            $btnRoles   = json_decode($settings['btn_pedidos']['btn_pedidos_roles']   ?? 'null', true);
-                            $btnModules = json_decode($settings['btn_pedidos']['btn_pedidos_modules'] ?? 'null', true);
-                            // When not yet configured default to all enabled (backwards-compatible)
-                            if ($btnRoles === null)   $btnRoles   = array_keys($roleOptions);
-                            if ($btnModules === null) $btnModules = array_keys($moduleOptions);
+                            // Load per-role config (new format)
+                            $btnConfigJson = $settings['btn_pedidos']['btn_pedidos_config'] ?? null;
+                            if ($btnConfigJson !== null) {
+                                $btnConfig = json_decode($btnConfigJson, true) ?? [];
+                            } else {
+                                // Backward-compat: convert old flat roles+modules to per-role config
+                                $oldRoles   = json_decode($settings['btn_pedidos']['btn_pedidos_roles']   ?? 'null', true);
+                                $oldModules = json_decode($settings['btn_pedidos']['btn_pedidos_modules'] ?? 'null', true);
+                                if ($oldRoles === null)   $oldRoles   = array_keys($roleOptions);
+                                if ($oldModules === null) $oldModules = $allModules;
+                                $btnConfig = [];
+                                foreach (array_keys($roleOptions) as $r) {
+                                    $btnConfig[$r] = in_array($r, $oldRoles) ? $oldModules : [];
+                                }
+                            }
                             ?>
 
+                            <?php foreach ($roleOptions as $roleVal => $roleLabel): ?>
+                            <?php $enabledModules = $btnConfig[$roleVal] ?? []; ?>
                             <div class="mb-4">
-                                <label class="form-label fw-semibold">Roles con acceso al botón</label>
-                                <div class="row g-2 mt-1">
-                                    <?php foreach ($roleOptions as $roleVal => $roleLabel): ?>
-                                    <div class="col-md-3 col-6">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox"
-                                                   name="fields[btn_pedidos_roles][]"
-                                                   value="<?= htmlspecialchars($roleVal) ?>"
-                                                   id="role_<?= htmlspecialchars($roleVal) ?>"
-                                                   <?= in_array($roleVal, $btnRoles) ? 'checked' : '' ?>>
-                                            <label class="form-check-label" for="role_<?= htmlspecialchars($roleVal) ?>">
-                                                <?= $roleLabel ?>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <?php endforeach; ?>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="fw-semibold fs-6"><?= $roleLabel ?></span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-pedidos-toggle-all"
+                                            data-role="<?= htmlspecialchars($roleVal) ?>">
+                                        <i class="bi bi-check2-all"></i> Todos / Ninguno
+                                    </button>
                                 </div>
-                            </div>
-
-                            <hr>
-
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Módulos donde se muestra el botón</label>
-                                <div class="row g-2 mt-1">
+                                <div class="row g-2 p-3 border rounded bg-light">
                                     <?php foreach ($moduleOptions as $modVal => $modLabel): ?>
                                     <div class="col-md-4 col-6">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox"
-                                                   name="fields[btn_pedidos_modules][]"
+                                            <input class="form-check-input btn-pedidos-check"
+                                                   type="checkbox"
+                                                   name="fields[btn_pedidos_config][<?= htmlspecialchars($roleVal) ?>][]"
                                                    value="<?= htmlspecialchars($modVal) ?>"
-                                                   id="module_<?= htmlspecialchars($modVal) ?>"
-                                                   <?= in_array($modVal, $btnModules) ? 'checked' : '' ?>>
-                                            <label class="form-check-label" for="module_<?= htmlspecialchars($modVal) ?>">
+                                                   id="bpc_<?= htmlspecialchars($roleVal) ?>_<?= htmlspecialchars($modVal) ?>"
+                                                   data-role="<?= htmlspecialchars($roleVal) ?>"
+                                                   <?= in_array($modVal, $enabledModules) ? 'checked' : '' ?>>
+                                            <label class="form-check-label"
+                                                   for="bpc_<?= htmlspecialchars($roleVal) ?>_<?= htmlspecialchars($modVal) ?>">
                                                 <?= $modLabel ?>
                                             </label>
                                         </div>
@@ -450,12 +449,27 @@
                                     <?php endforeach; ?>
                                 </div>
                             </div>
+                            <?php endforeach; ?>
 
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
                         </form>
                     </div>
                 </div>
             </div>
+
+            <script>
+            (function () {
+                document.querySelectorAll('.btn-pedidos-toggle-all').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var role = this.getAttribute('data-role');
+                        var escapedRole = CSS.escape(role);
+                        var boxes = document.querySelectorAll('.btn-pedidos-check[data-role="' + escapedRole + '"]');
+                        var allChecked = Array.prototype.every.call(boxes, function (cb) { return cb.checked; });
+                        Array.prototype.forEach.call(boxes, function (cb) { cb.checked = !allChecked; });
+                    });
+                });
+            }());
+            </script>
         </div>
     </div>
 </div>

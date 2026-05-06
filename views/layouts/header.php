@@ -274,17 +274,26 @@
 
             // Read btn_pedidos configuration from global_settings
             $btnSettingModel = new GlobalSetting();
-            $rolesJson   = $btnSettingModel->get('btn_pedidos_roles',   null);
-            $modulesJson = $btnSettingModel->get('btn_pedidos_modules', null);
+            $configJson = $btnSettingModel->get('btn_pedidos_config', null);
 
-            // When settings have never been saved, fall back to showing the button everywhere (backward-compatible)
-            if ($rolesJson === null || $modulesJson === null) {
-                $showBtnPedidos = true;
+            if ($configJson !== null) {
+                // New per-role/per-module config
+                $btnConfig  = json_decode($configJson, true) ?? [];
+                $userRole   = $_SESSION['user_role'] ?? '';
+                $roleModules = isset($btnConfig[$userRole]) ? $btnConfig[$userRole] : [];
+                $showBtnPedidos = in_array($currentModule, $roleModules);
             } else {
-                $allowedRoles   = json_decode($rolesJson,   true) ?? [];
-                $allowedModules = json_decode($modulesJson, true) ?? [];
-                $userRole       = $_SESSION['user_role'] ?? '';
-                $showBtnPedidos = in_array($userRole, $allowedRoles) && in_array($currentModule, $allowedModules);
+                // Backward-compat: fall back to old flat roles+modules settings
+                $rolesJson   = $btnSettingModel->get('btn_pedidos_roles',   null);
+                $modulesJson = $btnSettingModel->get('btn_pedidos_modules', null);
+                if ($rolesJson === null || $modulesJson === null) {
+                    $showBtnPedidos = true;
+                } else {
+                    $allowedRoles   = json_decode($rolesJson,   true) ?? [];
+                    $allowedModules = json_decode($modulesJson, true) ?? [];
+                    $userRole       = $_SESSION['user_role'] ?? '';
+                    $showBtnPedidos = in_array($userRole, $allowedRoles) && in_array($currentModule, $allowedModules);
+                }
             }
 
             if ($showBtnPedidos):
