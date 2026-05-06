@@ -187,6 +187,9 @@ class CashClosure extends BaseModel {
     }
     
     private function getServiceSalesTotal($shiftStart, $shiftEnd) {
+        // We compare by date (not timestamp) because reservation_date is a DATE column.
+        // Using DATE() on shift params ensures we capture all reservations for the days
+        // covered by the shift, regardless of the time component.
         $stmt = $this->db->prepare(
             "SELECT COALESCE(SUM(total), 0) as total
              FROM service_sales
@@ -222,6 +225,7 @@ class CashClosure extends BaseModel {
     }
 
     private function getCashServiceSalesTotal($shiftStart, $shiftEnd) {
+        // Compare by date so reservation_date (a DATE column) is matched correctly.
         $stmt = $this->db->prepare(
             "SELECT COALESCE(SUM(total), 0) as total
              FROM service_sales
