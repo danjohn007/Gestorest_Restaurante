@@ -262,7 +262,32 @@
         // Get current URL path to hide button on create/edit order pages
         $currentPath = $_SERVER['REQUEST_URI'] ?? '';
         $hideButton = strpos($currentPath, '/orders/create') !== false || strpos($currentPath, '/orders/edit') !== false;
-        if (!$hideButton): 
+
+        if (!$hideButton && isset($_SESSION['user_id'])):
+            // Resolve current module (first path segment after BASE_URL)
+            $baseUrlPath  = BASE_URL; // e.g. '/restaurante'
+            $relativePath = (strpos($currentPath, $baseUrlPath) === 0)
+                ? ltrim(substr($currentPath, strlen($baseUrlPath)), '/')
+                : ltrim($currentPath, '/');
+            $pathParts     = explode('/', $relativePath);
+            $currentModule = !empty($pathParts[0]) ? $pathParts[0] : 'dashboard';
+
+            // Read btn_pedidos configuration from global_settings
+            $btnSettingModel = new GlobalSetting();
+            $rolesJson   = $btnSettingModel->get('btn_pedidos_roles',   null);
+            $modulesJson = $btnSettingModel->get('btn_pedidos_modules', null);
+
+            // When settings have never been saved, fall back to showing the button everywhere (backward-compatible)
+            if ($rolesJson === null || $modulesJson === null) {
+                $showBtnPedidos = true;
+            } else {
+                $allowedRoles   = json_decode($rolesJson,   true) ?? [];
+                $allowedModules = json_decode($modulesJson, true) ?? [];
+                $userRole       = $_SESSION['user_role'] ?? '';
+                $showBtnPedidos = in_array($userRole, $allowedRoles) && in_array($currentModule, $allowedModules);
+            }
+
+            if ($showBtnPedidos):
         ?>
         <a href="<?= BASE_URL ?>/orders/create" 
            class="btn btn-primary btn-lg shadow-lg fixed-new-order-btn" 
@@ -270,4 +295,6 @@
            title="Crear Nuevo Pedido">
             <i class="bi bi-plus-circle-fill"></i> Nuevo Pedido
         </a>
-        <?php endif; ?>
+        <?php 
+            endif;
+        endif; ?>

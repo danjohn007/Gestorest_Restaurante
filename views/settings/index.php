@@ -40,6 +40,9 @@
             <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#chatbot">
                 <i class="bi bi-chat-dots"></i> Chatbot WhatsApp
             </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#btn_pedidos">
+                <i class="bi bi-toggles"></i> Mostrar Botón Pedidos
+            </a>
         </div>
     </div>
     
@@ -359,6 +362,95 @@
                                 <label class="form-label">Webhook URL</label>
                                 <input type="text" class="form-control" name="fields[chatbot_webhook]" value="<?= htmlspecialchars($settings['chatbot']['chatbot_webhook'] ?? '') ?>">
                             </div>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mostrar Botón Pedidos -->
+            <div class="tab-pane fade" id="btn_pedidos">
+                <div class="card">
+                    <div class="card-header"><h5 class="mb-0"><i class="bi bi-toggles"></i> Mostrar Botón Pedidos</h5></div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">Configure en qué módulos y para qué roles de usuario se muestra el botón flotante <strong>"Nuevo Pedido"</strong>.</p>
+                        <form method="POST" action="<?= BASE_URL ?>/settings/save">
+                            <input type="hidden" name="group" value="btn_pedidos">
+
+                            <?php
+                            // Define options first so defaults can use array_keys (single source of truth)
+                            $roleOptions = [
+                                ROLE_ADMIN      => '<i class="bi bi-shield-fill"></i> Administrador',
+                                ROLE_WAITER     => '<i class="bi bi-person-badge"></i> Mesero',
+                                ROLE_CASHIER    => '<i class="bi bi-cash-register"></i> Cajero',
+                                ROLE_SUPERADMIN => '<i class="bi bi-star-fill"></i> Superadmin',
+                            ];
+                            $moduleOptions = [
+                                'dashboard'    => '<i class="bi bi-speedometer2"></i> Dashboard',
+                                'orders'       => '<i class="bi bi-clipboard-check"></i> Pedidos',
+                                'tables'       => '<i class="bi bi-diagram-3"></i> Mesas / Layout',
+                                'reservations' => '<i class="bi bi-calendar-check"></i> Reservaciones',
+                                'financial'    => '<i class="bi bi-calculator"></i> Financiero',
+                                'inventory'    => '<i class="bi bi-boxes"></i> Inventario',
+                                'customers'    => '<i class="bi bi-people"></i> Clientes',
+                                'best_diners'  => '<i class="bi bi-trophy"></i> Mejores Comensales',
+                                'services'     => '<i class="bi bi-stars"></i> Servicios',
+                                'tickets'      => '<i class="bi bi-receipt"></i> Tickets',
+                                'users'        => '<i class="bi bi-person-gear"></i> Usuarios',
+                                'waiters'      => '<i class="bi bi-person-badge"></i> Meseros',
+                                'dishes'       => '<i class="bi bi-cup-hot"></i> Menú / Platillos',
+                                'settings'     => '<i class="bi bi-sliders"></i> Configuraciones',
+                            ];
+
+                            $btnRoles   = json_decode($settings['btn_pedidos']['btn_pedidos_roles']   ?? 'null', true);
+                            $btnModules = json_decode($settings['btn_pedidos']['btn_pedidos_modules'] ?? 'null', true);
+                            // When not yet configured default to all enabled (backwards-compatible)
+                            if ($btnRoles === null)   $btnRoles   = array_keys($roleOptions);
+                            if ($btnModules === null) $btnModules = array_keys($moduleOptions);
+                            ?>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Roles con acceso al botón</label>
+                                <div class="row g-2 mt-1">
+                                    <?php foreach ($roleOptions as $roleVal => $roleLabel): ?>
+                                    <div class="col-md-3 col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="fields[btn_pedidos_roles][]"
+                                                   value="<?= htmlspecialchars($roleVal) ?>"
+                                                   id="role_<?= htmlspecialchars($roleVal) ?>"
+                                                   <?= in_array($roleVal, $btnRoles) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="role_<?= htmlspecialchars($roleVal) ?>">
+                                                <?= $roleLabel ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Módulos donde se muestra el botón</label>
+                                <div class="row g-2 mt-1">
+                                    <?php foreach ($moduleOptions as $modVal => $modLabel): ?>
+                                    <div class="col-md-4 col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="fields[btn_pedidos_modules][]"
+                                                   value="<?= htmlspecialchars($modVal) ?>"
+                                                   id="module_<?= htmlspecialchars($modVal) ?>"
+                                                   <?= in_array($modVal, $btnModules) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="module_<?= htmlspecialchars($modVal) ?>">
+                                                <?= $modLabel ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+
                             <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
                         </form>
                     </div>
