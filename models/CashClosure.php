@@ -190,7 +190,7 @@ class CashClosure extends BaseModel {
         $stmt = $this->db->prepare(
             "SELECT COALESCE(SUM(total), 0) as total
              FROM service_sales
-             WHERE created_at BETWEEN ? AND ?"
+             WHERE COALESCE(reservation_date, DATE(created_at)) BETWEEN DATE(?) AND DATE(?)"
         );
         $stmt->execute([$shiftStart, $shiftEnd]);
         $result = $stmt->fetch();
@@ -225,7 +225,7 @@ class CashClosure extends BaseModel {
         $stmt = $this->db->prepare(
             "SELECT COALESCE(SUM(total), 0) as total
              FROM service_sales
-             WHERE created_at BETWEEN ? AND ?
+             WHERE COALESCE(reservation_date, DATE(created_at)) BETWEEN DATE(?) AND DATE(?)
                AND payment_method = 'efectivo'"
         );
         $stmt->execute([$shiftStart, $shiftEnd]);
