@@ -276,7 +276,15 @@
                             <span class="badge bg-primary">
                                 <?= ucfirst(htmlspecialchars($payment['payment_method'] ?? '')) ?>
                             </span>
-                            <small class="text-muted">(<?= $payment['tickets_count'] ?> tickets)</small>
+                            <?php
+                                $ticketCount  = (int)($payment['tickets_count'] ?? 0);
+                                $serviceCount = (int)($payment['services_count'] ?? 0);
+                                $parts = [];
+                                if ($ticketCount > 0)  $parts[] = $ticketCount  . ' ' . ($ticketCount  === 1 ? 'ticket'   : 'tickets');
+                                if ($serviceCount > 0) $parts[] = $serviceCount . ' ' . ($serviceCount === 1 ? 'servicio' : 'servicios');
+                                $countLabel = !empty($parts) ? implode(' + ', $parts) : '0 tickets';
+                            ?>
+                            <small class="text-muted">(<?= $countLabel ?>)</small>
                         </div>
                         <strong class="text-success">$<?= number_format($payment['total_income'], 2) ?></strong>
                     </div>

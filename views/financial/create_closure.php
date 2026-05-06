@@ -83,19 +83,14 @@
                         
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="final_cash" class="form-label">Efectivo Final <span class="text-danger">*</span></label>
+                                <label class="form-label">Efectivo Final</label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="final_cash" name="final_cash" 
-                                           step="0.01" min="0" required
-                                           value="<?= isset($_POST['final_cash']) ? htmlspecialchars($_POST['final_cash']) : '' ?>"
-                                           placeholder="0.00">
+                                    <input type="text" class="form-control bg-light" readonly
+                                           placeholder="Calculado automáticamente">
                                 </div>
                                 <div class="form-text">
-                                    Monto de efectivo actual en caja
-                                </div>
-                                <div class="invalid-feedback">
-                                    Por favor ingresa el efectivo final.
+                                    Calculado automáticamente: Efectivo Inicial + ventas en efectivo (tickets y servicios) − retiros
                                 </div>
                             </div>
                         </div>
@@ -119,10 +114,12 @@
                             El sistema calculará automáticamente:
                         </p>
                         <ul class="mb-0 mt-2">
-                            <li><strong>Total de Ventas:</strong> Suma de todos los tickets generados en el período</li>
+                            <li><strong>Ventas Restaurante:</strong> Suma de todos los tickets generados en el período</li>
+                            <li><strong>Ventas Servicios:</strong> Suma de todas las rentas de servicios en el período</li>
                             <li><strong>Total de Gastos:</strong> Suma de todos los gastos registrados en el período</li>
                             <li><strong>Total de Retiros:</strong> Suma de todos los retiros autorizados en el período</li>
-                            <li><strong>Utilidad Neta:</strong> Ventas - Gastos - Retiros</li>
+                            <li><strong>Efectivo Final:</strong> Efectivo Inicial + ventas en efectivo (tickets + servicios) − retiros</li>
+                            <li><strong>Utilidad Neta:</strong> Ventas Restaurante + Ventas Servicios − Gastos − Retiros</li>
                         </ul>
                     </div>
                     

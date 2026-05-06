@@ -72,7 +72,8 @@
                         <?php endif; ?>
                         <th>Efectivo Inicial</th>
                         <th>Efectivo Final</th>
-                        <th>Ventas</th>
+                        <th>Ventas Restaurante</th>
+                        <th>Ventas Servicios</th>
                         <th>Gastos</th>
                         <th>Retiros</th>
                         <th>Utilidad Neta</th>
@@ -100,12 +101,20 @@
                         <?php endif; ?>
                         <td>
                             <span class="text-info">$<?= number_format($closure['initial_cash'], 2) ?></span>
+                            <button type="button" class="btn btn-outline-secondary btn-sm ms-1" 
+                                    title="Editar efectivo inicial"
+                                    onclick="editInitialCash(<?= $closure['id'] ?>, <?= $closure['initial_cash'] ?>)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
                         </td>
                         <td>
                             <span class="text-primary">$<?= number_format($closure['final_cash'], 2) ?></span>
                         </td>
                         <td>
                             <span class="text-success fw-bold">$<?= number_format($closure['total_sales'], 2) ?></span>
+                        </td>
+                        <td>
+                            <span class="text-success">$<?= number_format($closure['total_service_sales'] ?? 0, 2) ?></span>
                         </td>
                         <td>
                             <span class="text-danger">$<?= number_format($closure['total_expenses'], 2) ?></span>
@@ -148,7 +157,7 @@
             <div class="col-md-3">
                 <div class="card bg-light text-center">
                     <div class="card-body">
-                        <h6 class="card-title">Total Ventas</h6>
+                        <h6 class="card-title">Total Ventas Restaurante</h6>
                         <h4 class="text-success">
                             $<?php 
                             $totalSales = array_sum(array_column($closures, 'total_sales'));
@@ -158,7 +167,20 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <div class="card bg-light text-center">
+                    <div class="card-body">
+                        <h6 class="card-title">Total Ventas Servicios</h6>
+                        <h4 class="text-success">
+                            $<?php
+                            $totalServiceSales = array_sum(array_column($closures, 'total_service_sales'));
+                            echo number_format($totalServiceSales, 2);
+                            ?>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
                 <div class="card bg-light text-center">
                     <div class="card-body">
                         <h6 class="card-title">Total Gastos</h6>
@@ -171,7 +193,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card bg-light text-center">
                     <div class="card-body">
                         <h6 class="card-title">Total Retiros</h6>
@@ -188,8 +210,8 @@
                 <div class="card bg-light text-center">
                     <div class="card-body">
                         <h6 class="card-title">Utilidad Neta Total</h6>
-                        <h4 class="<?= ($totalSales - $totalExpenses - $totalWithdrawals) >= 0 ? 'text-success' : 'text-danger' ?>">
-                            $<?= number_format($totalSales - $totalExpenses - $totalWithdrawals, 2) ?>
+                        <h4 class="<?= ($totalSales + $totalServiceSales - $totalExpenses - $totalWithdrawals) >= 0 ? 'text-success' : 'text-danger' ?>">
+                            $<?= number_format($totalSales + $totalServiceSales - $totalExpenses - $totalWithdrawals, 2) ?>
                         </h4>
                     </div>
                 </div>
@@ -249,6 +271,41 @@
 </div>
 <?php endif; ?>
 
+<!-- Modal para editar Efectivo Inicial -->
+<div class="modal fade" id="editInitialCashModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar Efectivo Inicial</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editInitialCashForm" method="POST">
+                <input type="hidden" name="date_from" value="<?= htmlspecialchars($date_from) ?>">
+                <input type="hidden" name="date_to" value="<?= htmlspecialchars($date_to) ?>">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editInitialCashInput" class="form-label">Efectivo Inicial <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="editInitialCashInput"
+                                   name="initial_cash" step="0.01" min="0" required placeholder="0.00">
+                        </div>
+                        <div class="form-text">
+                            El Efectivo Final se recalculará automáticamente basándose en las ventas en efectivo y retiros del período.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de confirmación para eliminar -->
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
@@ -282,4 +339,12 @@ document.getElementById('confirmDelete').addEventListener('click', function() {
         window.location.href = '<?= BASE_URL ?>/financial/deleteClosure/' + closureToDelete;
     }
 });
+
+function editInitialCash(id, currentValue) {
+    var parsed = parseFloat(currentValue);
+    document.getElementById('editInitialCashInput').value = isNaN(parsed) ? '0.00' : parsed.toFixed(2);
+    document.getElementById('editInitialCashForm').action = '<?= BASE_URL ?>/financial/updateInitialCash/' + id;
+    const modal = new bootstrap.Modal(document.getElementById('editInitialCashModal'));
+    modal.show();
+}
 </script>
