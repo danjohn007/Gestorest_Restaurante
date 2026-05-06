@@ -39,7 +39,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h6 class="card-title text-muted mb-1">Ventas Diarias</h6>
+                            <h6 class="card-title text-muted mb-1">Ventas Diarias Totales</h6>
                             <h3 class="mb-0"><?= formatCurrency($daily_sales['total_sales'] ?? 0) ?></h3>
                         </div>
                         <div class="text-success">
@@ -91,6 +91,54 @@
                         </div>
                         <div class="text-info">
                             <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted mb-1">Total de Servicios</h6>
+                            <h3 class="mb-0"><?= $total_services ?? 0 ?></h3>
+                        </div>
+                        <div class="text-primary">
+                            <i class="bi bi-briefcase" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted mb-1">Ventas del Restaurante del Día</h6>
+                            <h3 class="mb-0"><?= formatCurrency($daily_restaurant_sales ?? 0) ?></h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-shop" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title text-muted mb-1">Ventas del Día de Servicios</h6>
+                            <h3 class="mb-0"><?= formatCurrency($daily_service_sales_total ?? 0) ?></h3>
+                        </div>
+                        <div class="text-info">
+                            <i class="bi bi-stars" style="font-size: 2rem;"></i>
                         </div>
                     </div>
                 </div>
@@ -177,6 +225,37 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <p class="text-muted mb-0">No hay datos de platillos disponibles.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Popular Services -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-award"></i> Servicios Populares
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($popular_services)): ?>
+                        <?php foreach ($popular_services as $service): ?>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong><?= htmlspecialchars($service['name']) ?></strong><br>
+                                <small class="text-muted"><?= htmlspecialchars($service['category'] ?? '') ?></small>
+                            </div>
+                            <div class="text-end">
+                                <div><strong><?= $service['total_sales'] ?? 0 ?></strong> vendidos</div>
+                                <small class="text-muted"><?= formatCurrency($service['total_revenue'] ?? 0) ?></small>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-muted mb-0">No hay datos de servicios disponibles.</p>
                     <?php endif; ?>
                 </div>
             </div>

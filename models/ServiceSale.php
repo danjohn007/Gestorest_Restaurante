@@ -74,4 +74,30 @@ class ServiceSale extends BaseModel {
         $stmt->execute([$dateFrom, $dateTo]);
         return $stmt->fetchAll();
     }
+
+    public function getDailyTotal($date = null) {
+        $date = $date ?: date('Y-m-d');
+        $stmt = $this->db->prepare(
+            "SELECT COALESCE(SUM(total), 0) as total_income, COUNT(*) as total_count
+             FROM {$this->table}
+             WHERE COALESCE(reservation_date, DATE(created_at)) = ?"
+        );
+        $stmt->execute([$date]);
+        return $stmt->fetch();
+    }
+
+    public function getPopularServices($limit = 5) {
+        $stmt = $this->db->prepare(
+            "SELECT s.name, s.category,
+                    COUNT(ss.id) as total_sales,
+                    COALESCE(SUM(ss.total), 0) as total_revenue
+             FROM {$this->table} ss
+             JOIN services s ON ss.service_id = s.id
+             GROUP BY ss.service_id, s.name, s.category
+             ORDER BY total_sales DESC
+             LIMIT ?"
+        );
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
 }
