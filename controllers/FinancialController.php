@@ -56,11 +56,12 @@ class FinancialController extends BaseController {
             $method = $serviceRow['payment_method'];
             if (isset($methodIndex[$method])) {
                 $incomeByPaymentMethod[$methodIndex[$method]]['total_income'] += $serviceRow['total_income'];
-                $incomeByPaymentMethod[$methodIndex[$method]]['tickets_count'] += $serviceRow['services_count'];
+                $incomeByPaymentMethod[$methodIndex[$method]]['services_count'] = ($incomeByPaymentMethod[$methodIndex[$method]]['services_count'] ?? 0) + $serviceRow['services_count'];
             } else {
                 $incomeByPaymentMethod[] = [
                     'payment_method' => $method,
-                    'tickets_count'  => $serviceRow['services_count'],
+                    'tickets_count'  => 0,
+                    'services_count' => (int)$serviceRow['services_count'],
                     'total_income'   => $serviceRow['total_income'],
                 ];
             }
@@ -500,12 +501,11 @@ class FinancialController extends BaseController {
             'shift_start'      => $today . ' 00:00:00',
             'shift_end'        => date('Y-m-d H:i:s'),
             'initial_cash'     => 0,
-            'final_cash'       => 0,
             'notes'            => 'Corte automático del día ' . date('d/m/Y')
         ];
         
         if ($this->cashClosureModel->createClosure($data)) {
-            $this->setFlashMessage('success', 'Corte de caja del día generado automáticamente. Los montos de efectivo inicial y final se registraron en $0.00; actualícelos si es necesario.');
+            $this->setFlashMessage('success', 'Corte de caja del día generado automáticamente. El Efectivo Inicial se registró en $0.00; actualícelo si es necesario.');
         } else {
             $this->setFlashMessage('error', 'Error al generar el corte automático de caja');
         }
@@ -522,8 +522,7 @@ class FinancialController extends BaseController {
             $validationRules = [
                 'shift_start' => ['required' => true],
                 'shift_end' => ['required' => true],
-                'initial_cash' => ['required' => true, 'numeric' => true],
-                'final_cash' => ['required' => true, 'numeric' => true]
+                'initial_cash' => ['required' => true, 'numeric' => true]
             ];
             
             $errors = $this->validateInput($_POST, $validationRules);
@@ -535,7 +534,6 @@ class FinancialController extends BaseController {
                     'shift_start' => $_POST['shift_start'],
                     'shift_end' => $_POST['shift_end'],
                     'initial_cash' => $_POST['initial_cash'],
-                    'final_cash' => $_POST['final_cash'],
                     'notes' => $_POST['notes'] ?? ''
                 ];
                 
@@ -770,6 +768,52 @@ class FinancialController extends BaseController {
         }
         
         $this->redirect('financial/closures');
+    }
+    
+    public function updateInitialCash($id) {
+        $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->setFlashMessage('error', 'Método no permitido');
+            $this->redirect('financial/closures');
+            return;
+        }
+        
+        $initialCash = $_POST['initial_cash'] ?? null;
+        
+        if ($initialCash === null || !is_numeric($initialCash) || (float)$initialCash < 0) {
+            $this->setFlashMessage('error', 'Monto de efectivo inicial inválido');
+            $this->redirect('financial/closures');
+            return;
+        }
+        
+        $closure = $this->cashClosureModel->getClosureById($id);
+        if (!$closure) {
+            $this->setFlashMessage('error', 'Corte de caja no encontrado');
+            $this->redirect('financial/closures');
+            return;
+        }
+        
+        // Non-admin cashiers can only edit their own closures
+        $user = $this->getCurrentUser();
+        if ($user['role'] !== ROLE_ADMIN && $closure['cashier_user_id'] != $user['id']) {
+            $this->setFlashMessage('error', 'No tienes permisos para editar este corte de caja');
+            $this->redirect('financial/closures');
+            return;
+        }
+        
+        if ($this->cashClosureModel->updateInitialCash($id, (float)$initialCash)) {
+            $this->setFlashMessage('success', 'Efectivo inicial actualizado correctamente');
+        } else {
+            $this->setFlashMessage('error', 'Error al actualizar el efectivo inicial');
+        }
+        
+        // Redirect back with same filters if provided
+        $query = http_build_query(array_filter([
+            'date_from' => $_POST['date_from'] ?? null,
+            'date_to'   => $_POST['date_to'] ?? null,
+        ]));
+        $this->redirect('financial/closures' . ($query ? '?' . $query : ''));
     }
     
     public function deleteCategory($id) {

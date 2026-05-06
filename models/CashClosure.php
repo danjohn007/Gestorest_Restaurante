@@ -69,8 +69,11 @@ class CashClosure extends BaseModel {
         $shiftEnd = $data['shift_end'];
         $branchId = $data['branch_id'] ?? null;
         
-        // Get sales total for the period
+        // Get ticket sales total for the period (restaurant sales)
         $salesTotal = $this->getSalesTotal($shiftStart, $shiftEnd, $branchId);
+        
+        // Get service sales total for the period
+        $serviceSalesTotal = $this->getServiceSalesTotal($shiftStart, $shiftEnd);
         
         // Get expenses total for the period
         $expensesTotal = $this->getExpensesTotal($shiftStart, $shiftEnd, $branchId);
@@ -78,16 +81,47 @@ class CashClosure extends BaseModel {
         // Get withdrawals total for the period
         $withdrawalsTotal = $this->getWithdrawalsTotal($shiftStart, $shiftEnd, $branchId);
         
-        // Calculate net profit
-        $netProfit = $salesTotal - $expensesTotal - $withdrawalsTotal;
+        // Calculate net profit (tickets + services - expenses - withdrawals)
+        $netProfit = $salesTotal + $serviceSalesTotal - $expensesTotal - $withdrawalsTotal;
+        
+        // Calculate final cash automatically:
+        // initial_cash + cash from ticket sales + cash from service sales - cash withdrawals
+        $cashTicketSales   = $this->getCashSalesTotal($shiftStart, $shiftEnd, $branchId);
+        $cashServiceSales  = $this->getCashServiceSalesTotal($shiftStart, $shiftEnd);
+        $finalCash = (float)($data['initial_cash'] ?? 0) + $cashTicketSales + $cashServiceSales - $withdrawalsTotal;
         
         // Update data with calculated values
-        $data['total_sales'] = $salesTotal;
-        $data['total_expenses'] = $expensesTotal;
-        $data['total_withdrawals'] = $withdrawalsTotal;
-        $data['net_profit'] = $netProfit;
+        $data['total_sales']         = $salesTotal;
+        $data['total_service_sales'] = $serviceSalesTotal;
+        $data['total_expenses']      = $expensesTotal;
+        $data['total_withdrawals']   = $withdrawalsTotal;
+        $data['net_profit']          = $netProfit;
+        $data['final_cash']          = $finalCash;
         
         return $this->create($data);
+    }
+    
+    public function updateInitialCash($id, $initialCash) {
+        // Recalculate final_cash and net_profit when initial_cash changes
+        $closure = $this->getClosureById($id);
+        if (!$closure) {
+            return false;
+        }
+        
+        $shiftStart = $closure['shift_start'];
+        $shiftEnd   = $closure['shift_end'];
+        $branchId   = $closure['branch_id'];
+        
+        $cashTicketSales  = $this->getCashSalesTotal($shiftStart, $shiftEnd, $branchId);
+        $cashServiceSales = $this->getCashServiceSalesTotal($shiftStart, $shiftEnd);
+        $withdrawalsTotal = (float)$closure['total_withdrawals'];
+        
+        $finalCash = (float)$initialCash + $cashTicketSales + $cashServiceSales - $withdrawalsTotal;
+        
+        $stmt = $this->db->prepare(
+            "UPDATE {$this->table} SET initial_cash = ?, final_cash = ? WHERE id = ?"
+        );
+        return $stmt->execute([$initialCash, $finalCash, $id]);
     }
     
     private function getSalesTotal($shiftStart, $shiftEnd, $branchId = null) {
@@ -152,6 +186,53 @@ class CashClosure extends BaseModel {
         return $result['total'] ?? 0;
     }
     
+    private function getServiceSalesTotal($shiftStart, $shiftEnd) {
+        $stmt = $this->db->prepare(
+            "SELECT COALESCE(SUM(total), 0) as total
+             FROM service_sales
+             WHERE created_at BETWEEN ? AND ?"
+        );
+        $stmt->execute([$shiftStart, $shiftEnd]);
+        $result = $stmt->fetch();
+        return (float)($result['total'] ?? 0);
+    }
+
+    private function getCashSalesTotal($shiftStart, $shiftEnd, $branchId = null) {
+        $query = "SELECT COALESCE(SUM(t.total), 0) as total
+                  FROM tickets t
+                  JOIN orders o ON t.order_id = o.id";
+        
+        if ($branchId) {
+            $query .= " JOIN tables tb ON o.table_id = tb.id";
+        }
+        
+        $query .= " WHERE t.created_at BETWEEN ? AND ?
+                    AND t.payment_method = 'efectivo'";
+        $params = [$shiftStart, $shiftEnd];
+        
+        if ($branchId) {
+            $query .= " AND tb.branch_id = ?";
+            $params[] = $branchId;
+        }
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->execute($params);
+        $result = $stmt->fetch();
+        return (float)($result['total'] ?? 0);
+    }
+
+    private function getCashServiceSalesTotal($shiftStart, $shiftEnd) {
+        $stmt = $this->db->prepare(
+            "SELECT COALESCE(SUM(total), 0) as total
+             FROM service_sales
+             WHERE created_at BETWEEN ? AND ?
+               AND payment_method = 'efectivo'"
+        );
+        $stmt->execute([$shiftStart, $shiftEnd]);
+        $result = $stmt->fetch();
+        return (float)($result['total'] ?? 0);
+    }
+
     public function getClosuresByDateRange($dateFrom, $dateTo, $branchId = null) {
         $conditions = [
             'date_from' => $dateFrom,
