@@ -6,6 +6,7 @@ class FinancialController extends BaseController {
     private $cashWithdrawalModel;
     private $cashClosureModel;
     private $ticketModel;
+    private $serviceSaleModel;
     
     public function __construct() {
         parent::__construct();
@@ -17,6 +18,7 @@ class FinancialController extends BaseController {
         $this->cashWithdrawalModel = new CashWithdrawal();
         $this->cashClosureModel = new CashClosure();
         $this->ticketModel = new Ticket();
+        $this->serviceSaleModel = new ServiceSale();
     }
     
     // Dashboard financiero
@@ -38,6 +40,41 @@ class FinancialController extends BaseController {
         $totalIncome = $this->ticketModel->getTotalIncome($dateFrom, $dateTo);
         $incomeByPaymentMethod = $this->ticketModel->getIncomeByPaymentMethod($dateFrom, $dateTo);
         $incomeVsExpenses = $this->ticketModel->getIncomeVsExpensesData($dateFrom, $dateTo);
+        
+        // Include service sales in income totals
+        $serviceSalesTotals = $this->serviceSaleModel->getTotalByDateRange($dateFrom, $dateTo);
+        $totalIncome['total_income'] = ($totalIncome['total_income'] ?? 0) + ($serviceSalesTotals['total_income'] ?? 0);
+        $totalIncome['service_sales'] = (int)($serviceSalesTotals['total_sales'] ?? 0);
+
+        // Merge per-day service income into the income vs expenses chart data
+        $serviceSalesByDate = $this->serviceSaleModel->getIncomeByDate($dateFrom, $dateTo);
+        $serviceIncomeByDate = [];
+        foreach ($serviceSalesByDate as $row) {
+            $serviceIncomeByDate[$row['date']] = (float)$row['total_income'];
+        }
+        // Build index of dates already in the chart array
+        $chartDates = [];
+        foreach ($incomeVsExpenses as &$dayData) {
+            $serviceIncome = $serviceIncomeByDate[$dayData['date']] ?? 0;
+            $dayData['income'] += $serviceIncome;
+            $dayData['net_profit'] += $serviceIncome;
+            $chartDates[$dayData['date']] = true;
+        }
+        unset($dayData);
+        // Add days that have service sales but no ticket income
+        foreach ($serviceIncomeByDate as $date => $serviceIncome) {
+            if (!isset($chartDates[$date])) {
+                $incomeVsExpenses[] = [
+                    'date' => $date,
+                    'income' => $serviceIncome,
+                    'expenses' => 0,
+                    'withdrawals' => 0,
+                    'total_expenses' => 0,
+                    'net_profit' => $serviceIncome
+                ];
+            }
+        }
+        usort($incomeVsExpenses, fn($a, $b) => strcmp($a['date'], $b['date']));
         
         // New payment method statistics
         $paymentMethodStats = $this->ticketModel->getPaymentMethodStats($dateFrom, $dateTo);
