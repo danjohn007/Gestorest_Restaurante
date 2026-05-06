@@ -4,6 +4,8 @@ class DashboardController extends BaseController {
     private $orderModel;
     private $ticketModel;
     private $dishModel;
+    private $serviceModel;
+    private $serviceSaleModel;
     
     public function __construct() {
         parent::__construct();
@@ -13,6 +15,8 @@ class DashboardController extends BaseController {
         $this->orderModel = new Order();
         $this->ticketModel = new Ticket();
         $this->dishModel = new Dish();
+        $this->serviceModel = new Service();
+        $this->serviceSaleModel = new ServiceSale();
     }
     
     public function index() {
@@ -45,14 +49,28 @@ class DashboardController extends BaseController {
         // Table statistics
         $tableStats = $this->tableModel->getTableStats();
         
-        // Daily sales
+        // Daily sales from orders (restaurant)
         $dailySales = $this->orderModel->getDailySales();
+        
+        // Daily restaurant sales from tickets
+        $dailySalesReport = $this->ticketModel->getDailySalesReport();
+        $dailyRestaurantSales = $dailySalesReport['totals']['total_amount'] ?? 0;
+        
+        // Daily service sales
+        $dailyServiceSalesData = $this->serviceSaleModel->getDailyTotal();
+        $dailyServiceSalesTotal = $dailyServiceSalesData['total_income'] ?? 0;
+        
+        // Combined daily sales total
+        $combinedDailySales = $dailyRestaurantSales + $dailyServiceSalesTotal;
         
         // Recent orders
         $recentOrders = $this->orderModel->getOrdersWithDetails(['limit' => 5]);
         
         // Popular dishes
         $popularDishes = $this->dishModel->getPopularDishes(5);
+        
+        // Popular services
+        $popularServices = $this->serviceSaleModel->getPopularServices(5);
         
         // Monthly revenue (simplified)
         $monthlyRevenue = $this->getMonthlyRevenue();
@@ -62,12 +80,16 @@ class DashboardController extends BaseController {
         
         return [
             'table_stats' => $tableStats,
-            'daily_sales' => $dailySales,
+            'daily_sales' => array_merge($dailySales ?? [], ['total_sales' => $combinedDailySales]),
+            'daily_restaurant_sales' => $dailyRestaurantSales,
+            'daily_service_sales_total' => $dailyServiceSalesTotal,
             'recent_orders' => $recentOrders,
             'popular_dishes' => $popularDishes,
+            'popular_services' => $popularServices,
             'monthly_revenue' => $monthlyRevenue,
             'total_tables' => $this->tableModel->count(['active' => 1]),
             'total_dishes' => $this->dishModel->count(['active' => 1]),
+            'total_services' => $this->serviceModel->count(['active' => 1]),
             'pending_orders' => $this->orderModel->count(['status' => ORDER_PENDING]),
             'ready_orders' => $this->orderModel->count(['status' => ORDER_READY]),
             'expired_orders_count' => $expiredOrdersCount
