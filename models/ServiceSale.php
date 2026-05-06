@@ -11,15 +11,15 @@ class ServiceSale extends BaseModel {
         $params = [];
         
         if (!empty($filters['date'])) {
-            $conditions[] = "DATE(ss.created_at) = ?";
+            $conditions[] = "COALESCE(ss.reservation_date, DATE(ss.created_at)) = ?";
             $params[] = $filters['date'];
         }
         if (!empty($filters['date_from'])) {
-            $conditions[] = "DATE(ss.created_at) >= ?";
+            $conditions[] = "COALESCE(ss.reservation_date, DATE(ss.created_at)) >= ?";
             $params[] = $filters['date_from'];
         }
         if (!empty($filters['date_to'])) {
-            $conditions[] = "DATE(ss.created_at) <= ?";
+            $conditions[] = "COALESCE(ss.reservation_date, DATE(ss.created_at)) <= ?";
             $params[] = $filters['date_to'];
         }
         if (!empty($filters['user_id'])) {
@@ -41,7 +41,7 @@ class ServiceSale extends BaseModel {
         $stmt = $this->db->prepare(
             "SELECT COALESCE(SUM(total), 0) as total_income, COUNT(*) as total_sales
              FROM {$this->table}
-             WHERE DATE(created_at) BETWEEN ? AND ?"
+             WHERE COALESCE(reservation_date, DATE(created_at)) BETWEEN ? AND ?"
         );
         $stmt->execute([$dateFrom, $dateTo]);
         return $stmt->fetch();
@@ -49,13 +49,13 @@ class ServiceSale extends BaseModel {
 
     public function getIncomeByDate($dateFrom, $dateTo) {
         $stmt = $this->db->prepare(
-            "SELECT DATE(created_at) as date,
+            "SELECT COALESCE(reservation_date, DATE(created_at)) as date,
                     COALESCE(SUM(total), 0) as total_income,
                     COUNT(*) as total_sales
              FROM {$this->table}
-             WHERE DATE(created_at) BETWEEN ? AND ?
-             GROUP BY DATE(created_at)
-             ORDER BY DATE(created_at) ASC"
+             WHERE COALESCE(reservation_date, DATE(created_at)) BETWEEN ? AND ?
+             GROUP BY COALESCE(reservation_date, DATE(created_at))
+             ORDER BY COALESCE(reservation_date, DATE(created_at)) ASC"
         );
         $stmt->execute([$dateFrom, $dateTo]);
         return $stmt->fetchAll();
@@ -67,7 +67,7 @@ class ServiceSale extends BaseModel {
                     COUNT(*) as services_count,
                     COALESCE(SUM(total), 0) as total_income
              FROM {$this->table}
-             WHERE DATE(created_at) BETWEEN ? AND ?
+             WHERE COALESCE(reservation_date, DATE(created_at)) BETWEEN ? AND ?
              GROUP BY payment_method
              ORDER BY total_income DESC"
         );

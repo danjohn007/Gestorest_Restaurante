@@ -64,6 +64,11 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Fecha de Reservación *</label>
+                        <input type="date" class="form-control" name="reservation_date" value="<?= date('Y-m-d') ?>" required>
+                        <div class="form-text">Fecha en que se realizará el servicio.</div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Notas</label>
                         <textarea class="form-control" name="notes" rows="2"></textarea>
                     </div>
@@ -190,7 +195,8 @@
                         <th>Total</th>
                         <th>Pago</th>
                         <th>Cajero</th>
-                        <th>Hora</th>
+                        <th>Fecha Reservación</th>
+                        <th>Hora Registro</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -212,6 +218,12 @@
                             <?php endif; ?>
                         </td>
                         <td><?= htmlspecialchars($sale['cashier_name']) ?></td>
+                        <td>
+                            <?php
+                                $resDate = $sale['reservation_date'] ?? null;
+                                echo $resDate ? date('d/m/Y', strtotime($resDate)) : date('d/m/Y', strtotime($sale['created_at']));
+                            ?>
+                        </td>
                         <td><small><?= date('H:i', strtotime($sale['created_at'])) ?></small></td>
                     </tr>
                     <?php endforeach; ?>

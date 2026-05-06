@@ -41,6 +41,10 @@ class FinancialController extends BaseController {
         $incomeByPaymentMethod = $this->ticketModel->getIncomeByPaymentMethod($dateFrom, $dateTo);
         $incomeVsExpenses = $this->ticketModel->getIncomeVsExpensesData($dateFrom, $dateTo);
         
+        // Capture ticket-only totals before merging service data (for Restaurante tab)
+        $ticketTotalIncome = $totalIncome;
+        $ticketIncomeByPaymentMethod = $incomeByPaymentMethod;
+
         // Include service sales in income totals
         $serviceSalesTotals = $this->serviceSaleModel->getTotalByDateRange($dateFrom, $dateTo);
         $totalIncome['total_income'] = ($totalIncome['total_income'] ?? 0) + ($serviceSalesTotals['total_income'] ?? 0);
@@ -137,7 +141,12 @@ class FinancialController extends BaseController {
             'branches' => $branches,
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
-            'selected_branch' => $branchId
+            'selected_branch' => $branchId,
+            // Granular data for Restaurante / Servicios tabs
+            'ticket_total_income' => $ticketTotalIncome,
+            'ticket_income_by_payment_method' => $ticketIncomeByPaymentMethod,
+            'service_sales_totals' => $serviceSalesTotals,
+            'service_income_by_payment_method' => $serviceIncomeByMethod,
         ];
         
         $this->view('financial/index', $data);

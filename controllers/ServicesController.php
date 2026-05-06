@@ -116,7 +116,8 @@ class ServicesController extends BaseController {
             'payment_method' => $paymentMethod,
             'cash_received' => $cashReceived,
             'change_amount' => $changeAmount,
-            'notes' => $notes
+            'notes' => $notes,
+            'reservation_date' => !empty($_POST['reservation_date']) ? $_POST['reservation_date'] : date('Y-m-d')
         ];
         
         $this->serviceSaleModel->create($saleData);
