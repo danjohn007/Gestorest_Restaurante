@@ -70,7 +70,15 @@
                     <div>
                         <h6 class="card-title text-muted mb-1">Ingresos Totales</h6>
                         <h3 class="mb-0 text-success">$<?= number_format($total_income['total_income'] ?? 0, 2) ?></h3>
-                        <small class="text-muted"><?= $total_income['total_tickets'] ?? 0 ?> tickets</small>
+                        <?php
+                            $ticketCount = $total_income['total_tickets'] ?? 0;
+                            $serviceCount = $total_income['service_sales'] ?? 0;
+                            $subtitle = $ticketCount . ' tickets';
+                            if ($serviceCount > 0) {
+                                $subtitle .= ' + ' . $serviceCount . ' servicios';
+                            }
+                        ?>
+                        <small class="text-muted"><?= $subtitle ?></small>
                     </div>
                     <div class="text-success">
                         <i class="bi bi-arrow-up-circle" style="font-size: 2rem;"></i>

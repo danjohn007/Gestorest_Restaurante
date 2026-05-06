@@ -46,4 +46,18 @@ class ServiceSale extends BaseModel {
         $stmt->execute([$dateFrom, $dateTo]);
         return $stmt->fetch();
     }
+
+    public function getIncomeByDate($dateFrom, $dateTo) {
+        $stmt = $this->db->prepare(
+            "SELECT DATE(created_at) as date,
+                    COALESCE(SUM(total), 0) as total_income,
+                    COUNT(*) as total_sales
+             FROM {$this->table}
+             WHERE DATE(created_at) BETWEEN ? AND ?
+             GROUP BY DATE(created_at)
+             ORDER BY DATE(created_at) ASC"
+        );
+        $stmt->execute([$dateFrom, $dateTo]);
+        return $stmt->fetchAll();
+    }
 }
