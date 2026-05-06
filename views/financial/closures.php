@@ -341,7 +341,8 @@ document.getElementById('confirmDelete').addEventListener('click', function() {
 });
 
 function editInitialCash(id, currentValue) {
-    document.getElementById('editInitialCashInput').value = parseFloat(currentValue).toFixed(2);
+    var parsed = parseFloat(currentValue);
+    document.getElementById('editInitialCashInput').value = isNaN(parsed) ? '0.00' : parsed.toFixed(2);
     document.getElementById('editInitialCashForm').action = '<?= BASE_URL ?>/financial/updateInitialCash/' + id;
     const modal = new bootstrap.Modal(document.getElementById('editInitialCashModal'));
     modal.show();
