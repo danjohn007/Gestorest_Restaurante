@@ -46,6 +46,27 @@ class FinancialController extends BaseController {
         $totalIncome['total_income'] = ($totalIncome['total_income'] ?? 0) + ($serviceSalesTotals['total_income'] ?? 0);
         $totalIncome['service_sales'] = (int)($serviceSalesTotals['total_sales'] ?? 0);
 
+        // Merge service sales income by payment method into ticket income by payment method
+        $serviceIncomeByMethod = $this->serviceSaleModel->getIncomeByPaymentMethod($dateFrom, $dateTo);
+        $methodIndex = [];
+        foreach ($incomeByPaymentMethod as $i => $row) {
+            $methodIndex[$row['payment_method']] = $i;
+        }
+        foreach ($serviceIncomeByMethod as $serviceRow) {
+            $method = $serviceRow['payment_method'];
+            if (isset($methodIndex[$method])) {
+                $incomeByPaymentMethod[$methodIndex[$method]]['total_income'] += $serviceRow['total_income'];
+                $incomeByPaymentMethod[$methodIndex[$method]]['tickets_count'] += $serviceRow['services_count'];
+            } else {
+                $incomeByPaymentMethod[] = [
+                    'payment_method' => $method,
+                    'tickets_count'  => $serviceRow['services_count'],
+                    'total_income'   => $serviceRow['total_income'],
+                ];
+            }
+        }
+        usort($incomeByPaymentMethod, fn($a, $b) => $b['total_income'] <=> $a['total_income']);
+
         // Merge per-day service income into the income vs expenses chart data
         $serviceSalesByDate = $this->serviceSaleModel->getIncomeByDate($dateFrom, $dateTo);
         $serviceIncomeByDate = [];
@@ -451,15 +472,45 @@ class FinancialController extends BaseController {
         $closures = $this->cashClosureModel->getClosuresWithDetails($conditions);
         $branches = $user['role'] === ROLE_ADMIN ? $this->branchModel->getAllActive() : [];
         
+        // Determine if the current filter is for today (to show the auto-closure button)
+        $today = date('Y-m-d');
+        $isFilteringToday = ($dateFrom === $today && $dateTo === $today);
+        
         $data = [
             'closures' => $closures,
             'branches' => $branches,
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
-            'selected_branch' => $branchId
+            'selected_branch' => $branchId,
+            'is_filtering_today' => $isFilteringToday
         ];
         
         $this->view('financial/closures', $data);
+    }
+    
+    public function autoClosureToday() {
+        $this->requireRole([ROLE_ADMIN, ROLE_CASHIER]);
+        
+        $user = $this->getCurrentUser();
+        $today = date('Y-m-d');
+        
+        $data = [
+            'branch_id'        => null,
+            'cashier_user_id'  => $user['id'],
+            'shift_start'      => $today . ' 00:00:00',
+            'shift_end'        => date('Y-m-d H:i:s'),
+            'initial_cash'     => 0,
+            'final_cash'       => 0,
+            'notes'            => 'Corte automático del día ' . date('d/m/Y')
+        ];
+        
+        if ($this->cashClosureModel->createClosure($data)) {
+            $this->setFlashMessage('success', 'Corte de caja del día generado automáticamente. Los montos de efectivo inicial y final se registraron en $0.00; actualícelos si es necesario.');
+        } else {
+            $this->setFlashMessage('error', 'Error al generar el corte automático de caja');
+        }
+        
+        $this->redirect('financial/closures?date_from=' . $today . '&date_to=' . $today);
     }
     
     public function createClosure() {

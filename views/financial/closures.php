@@ -37,11 +37,14 @@
                 </select>
             </div>
             <?php endif; ?>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">
+            <div class="col-md-3 d-flex align-items-end flex-wrap">
+                <button type="submit" class="btn btn-primary me-2 mb-1">
                     <i class="bi bi-funnel"></i> Filtrar
                 </button>
-                <a href="<?= BASE_URL ?>/financial/closures" class="btn btn-outline-secondary">
+                <a href="<?= BASE_URL ?>/financial/closures?date_from=<?= htmlspecialchars(date('Y-m-d')) ?>&date_to=<?= htmlspecialchars(date('Y-m-d')) ?>" class="btn btn-info text-white me-2 mb-1" title="Ver solo el día de hoy">
+                    <i class="bi bi-calendar-day"></i> Hoy
+                </a>
+                <a href="<?= BASE_URL ?>/financial/closures" class="btn btn-outline-secondary mb-1">
                     <i class="bi bi-arrow-clockwise"></i>
                 </a>
             </div>
@@ -217,7 +220,13 @@
             <i class="bi bi-journal-check display-1 text-muted"></i>
             <h3 class="mt-3">No hay cortes de caja registrados</h3>
             <p class="text-muted">No se encontraron cortes con los filtros aplicados</p>
-            <a href="<?= BASE_URL ?>/financial/createClosure" class="btn btn-success">
+            <?php if (!empty($is_filtering_today)): ?>
+            <a href="<?= BASE_URL ?>/financial/autoClosureToday" class="btn btn-success me-2"
+               onclick="return confirm('¿Generar automáticamente el corte de caja de hoy?')">
+                <i class="bi bi-lightning-charge"></i> Calcular Corte de Hoy
+            </a>
+            <?php endif; ?>
+            <a href="<?= BASE_URL ?>/financial/createClosure" class="btn btn-outline-success">
                 <i class="bi bi-plus-circle"></i> Realizar Primer Corte
             </a>
         </div>
