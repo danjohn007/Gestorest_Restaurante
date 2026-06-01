@@ -416,7 +416,7 @@ class ReservationsController extends BaseController {
                 '',
                 'Detalles de la reservación:',
                 'Número de reservación: #' . str_pad($reservationId, 6, '0', STR_PAD_LEFT),
-                'Fecha y hora: ' . date('d/m/Y h:i A', strtotime($reservation['reservation_datetime'])),
+                'Fecha y hora: ' . date('d/m/Y H:i', strtotime($reservation['reservation_datetime'])),
                 'Personas: ' . $reservation['party_size']
             ];
 
@@ -480,10 +480,17 @@ class ReservationsController extends BaseController {
             $closingTime = trim($contactSettings['closing_time'] ?? '');
             if ($openingTime !== '' && $closingTime !== '') {
                 $timeRange = $openingTime . ' - ' . $closingTime;
+            } elseif ($openingTime !== '') {
+                $timeRange = 'Abre: ' . $openingTime;
+            } elseif ($closingTime !== '') {
+                $timeRange = 'Cierra: ' . $closingTime;
             } else {
-                $timeRange = $openingTime !== '' ? $openingTime : $closingTime;
+                $timeRange = '';
             }
-            $contactLines[] = trim($schedule . ($schedule !== '' && $timeRange !== '' ? ' | ' : '') . $timeRange);
+            $scheduleLine = trim($schedule . ($schedule !== '' && $timeRange !== '' ? ' | ' : '') . $timeRange);
+            if ($scheduleLine !== '') {
+                $contactLines[] = $scheduleLine;
+            }
         }
 
         return $contactLines;

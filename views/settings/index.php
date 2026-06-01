@@ -244,7 +244,7 @@
                             <form method="POST" action="<?= BASE_URL ?>/settings/save">
                                 <input type="hidden" name="group" value="email">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold" for="reservation_cancellation_text">Texto Cancelación</label>
+                                    <label class="form-label fw-semibold" for="reservation_cancellation_text">Instrucciones de cancelación</label>
                                     <textarea class="form-control" id="reservation_cancellation_text" name="fields[reservation_cancellation_text]" rows="3"><?= htmlspecialchars($reservationCancellationText) ?></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
