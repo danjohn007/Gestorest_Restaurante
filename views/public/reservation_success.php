@@ -1,4 +1,8 @@
-<?php $title = 'Reservación Exitosa'; ?>
+<?php
+$title = 'Reservación Exitosa';
+$reservationEmailSettings = (new GlobalSetting())->getByGroup('email');
+$reservationCancellationText = trim($reservationEmailSettings['reservation_cancellation_text'] ?? GlobalSetting::getDefaultReservationCancellationText());
+?>
 
 <div class="row justify-content-center">
     <div class="col-md-8">
@@ -54,7 +58,7 @@
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-telephone text-muted"></i>
-                            Si necesita modificar o cancelar, contacte al restaurante
+                            <?= htmlspecialchars($reservationCancellationText) ?>
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-gift text-muted"></i>

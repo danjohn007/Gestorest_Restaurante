@@ -129,6 +129,9 @@ class ReservationsController extends BaseController {
         
         try {
             $this->reservationModel->update($id, ['status' => $newStatus]);
+            if ($reservation['status'] !== 'confirmada' && $newStatus === 'confirmada') {
+                $this->sendReservationConfirmationEmail($id);
+            }
             $this->redirect('reservations/show/' . $id, 'success', 'Estado actualizado correctamente');
         } catch (Exception $e) {
             $this->redirect('reservations', 'error', 'Error al actualizar el estado: ' . $e->getMessage());
@@ -377,6 +380,124 @@ class ReservationsController extends BaseController {
             http_response_code(500);
             echo json_encode(['error' => 'Error fetching available tables: ' . $e->getMessage()]);
         }
+    }
+
+    private function sendReservationConfirmationEmail($reservationId) {
+        try {
+            $reservationRows = $this->reservationModel->getReservationsWithTables(['id' => $reservationId]);
+            if (!empty($reservationRows)) {
+                $reservation = $reservationRows[0];
+            } else {
+                $reservation = $this->reservationModel->find($reservationId);
+            }
+            if (!$reservation) {
+                return;
+            }
+
+            $customer = $this->customerModel->findBy('phone', $reservation['customer_phone']);
+            $customerEmail = trim($customer['email'] ?? '');
+            if (empty($customerEmail) || !filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+                return;
+            }
+
+            $globalSettingModel = new GlobalSetting();
+            $emailSettings = $globalSettingModel->getByGroup('email');
+            if (empty($emailSettings['smtp_host']) || empty($emailSettings['smtp_user'])) {
+                return;
+            }
+
+            $generalSettings = $globalSettingModel->getByGroup('general');
+            $contactSettings = $globalSettingModel->getByGroup('contacto');
+            $siteName = trim($generalSettings['site_name'] ?? APP_NAME);
+            $cancellationText = trim($emailSettings['reservation_cancellation_text'] ?? GlobalSetting::getDefaultReservationCancellationText());
+            $contactLines = $this->buildContactLines($contactSettings);
+
+            $tables = trim($reservation['table_numbers'] ?? '');
+            $bodyLines = [
+                "Hola {$reservation['customer_name']},",
+                '',
+                "Su reservación en {$siteName} ha sido confirmada.",
+                '',
+                'Detalles de la reservación:',
+                'Número de reservación: #' . str_pad($reservationId, 6, '0', STR_PAD_LEFT),
+                'Fecha y hora: ' . date('d/m/Y H:i', strtotime($reservation['reservation_datetime'])),
+                'Personas: ' . $reservation['party_size']
+            ];
+
+            if ($tables !== '') {
+                $bodyLines[] = 'Mesas: ' . $tables;
+            }
+
+            if (!empty($reservation['notes'])) {
+                $bodyLines[] = 'Notas: ' . trim($reservation['notes']);
+            }
+
+            if (!empty($contactLines)) {
+                $bodyLines[] = '';
+                $bodyLines[] = 'Información de contacto:';
+                foreach ($contactLines as $contactLine) {
+                    $bodyLines[] = $contactLine;
+                }
+            }
+
+            if ($cancellationText !== '') {
+                $bodyLines[] = '';
+                $bodyLines[] = $cancellationText;
+            }
+
+            $bodyLines[] = '';
+            $bodyLines[] = 'Gracias por elegirnos.';
+
+            $mailer = new SmtpMailer($emailSettings);
+            $result = $mailer->sendPlainText(
+                $customerEmail,
+                'Confirmación de Reservación - ' . $siteName,
+                implode("\r\n", $bodyLines)
+            );
+
+            if ($result !== true) {
+                error_log('No se pudo enviar el correo de confirmación de reservación #' . $reservationId . ': ' . $result);
+            }
+        } catch (Exception $e) {
+            error_log('Error al enviar confirmación de reservación #' . $reservationId . ': ' . $e->getMessage());
+        }
+    }
+
+    private function buildContactLines($contactSettings) {
+        $contactLines = [];
+
+        if (!empty($contactSettings['phone_main'])) {
+            $contactLines[] = 'Teléfono principal: ' . trim($contactSettings['phone_main']);
+        }
+
+        if (!empty($contactSettings['phone_secondary'])) {
+            $contactLines[] = 'Teléfono secundario: ' . trim($contactSettings['phone_secondary']);
+        }
+
+        if (!empty($contactSettings['whatsapp'])) {
+            $contactLines[] = 'WhatsApp: ' . trim($contactSettings['whatsapp']);
+        }
+
+        if (!empty($contactSettings['operation_days']) || !empty($contactSettings['opening_time']) || !empty($contactSettings['closing_time'])) {
+            $schedule = trim($contactSettings['operation_days'] ?? '');
+            $openingTime = trim($contactSettings['opening_time'] ?? '');
+            $closingTime = trim($contactSettings['closing_time'] ?? '');
+            if ($openingTime !== '' && $closingTime !== '') {
+                $timeRange = $openingTime . ' - ' . $closingTime;
+            } elseif ($openingTime !== '') {
+                $timeRange = 'Abre: ' . $openingTime;
+            } elseif ($closingTime !== '') {
+                $timeRange = 'Cierra: ' . $closingTime;
+            } else {
+                $timeRange = '';
+            }
+            $scheduleLine = trim($schedule . ($schedule !== '' && $timeRange !== '' ? ' | ' : '') . $timeRange);
+            if ($scheduleLine !== '') {
+                $contactLines[] = $scheduleLine;
+            }
+        }
+
+        return $contactLines;
     }
 }
 ?>

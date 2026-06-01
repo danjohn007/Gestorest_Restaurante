@@ -95,6 +95,7 @@ class PublicController extends BaseController {
         $customerData = [
             'name' => $_POST['customer_name'],
             'phone' => $_POST['customer_phone'],
+            'email' => trim($_POST['customer_email'] ?? '') ?: null,
             'birthday' => !empty($_POST['customer_birthday']) ? $_POST['customer_birthday'] : null
         ];
         
@@ -273,6 +274,10 @@ class PublicController extends BaseController {
             'reservation_datetime' => ['required' => true],
             'party_size' => ['required' => true, 'min' => 1, 'max' => 20]
         ]);
+
+        if (!empty($data['customer_email']) && !filter_var($data['customer_email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['customer_email'] = 'Ingrese un correo electrónico válido';
+        }
         
         // Validate birthday format if provided (DD/MM)
         if (!empty($data['customer_birthday'])) {

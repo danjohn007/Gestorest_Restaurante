@@ -1,6 +1,10 @@
 <?php
 class GlobalSetting extends BaseModel {
     protected $table = 'global_settings';
+
+    public static function getDefaultReservationCancellationText() {
+        return 'Si necesita modificar o cancelar su reservación, por favor contacte con nosotros lo antes posible.';
+    }
     
     public function get($key, $default = null) {
         $record = $this->findBy('setting_key', $key);
