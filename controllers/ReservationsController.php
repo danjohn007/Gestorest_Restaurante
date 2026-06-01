@@ -452,7 +452,7 @@ class ReservationsController extends BaseController {
             $result = $mailer->sendPlainText(
                 $customerEmail,
                 'Confirmación de Reservación - ' . $siteName,
-                implode("\n", $bodyLines)
+                implode("\r\n", $bodyLines)
             );
 
             if ($result !== true) {

@@ -102,12 +102,11 @@ class SettingsController extends BaseController {
         try {
             $mailer = new SmtpMailer($emailSettings);
             $date = date('r');
-            $smtpPort = $emailSettings['smtp_port'] ?? 587;
             $result = $mailer->sendPlainText(
                 $toEmail,
                 'Correo de Prueba - GestoRest',
                 "Este es un correo de prueba enviado desde el sistema GestoRest.\r\n\r\n" .
-                "Servidor SMTP: {$emailSettings['smtp_host']}:{$smtpPort}\r\n" .
+                "Servidor SMTP: " . $emailSettings['smtp_host'] . ':' . ($emailSettings['smtp_port'] ?? 587) . "\r\n" .
                 "Fecha: {$date}\r\n\r\n" .
                 "Si recibiste este mensaje, la configuración SMTP es correcta."
             );
