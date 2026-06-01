@@ -158,6 +158,7 @@ class SmtpMailer {
 
     private function normalizeBody($body) {
         $body = str_replace(["\r\n", "\r"], "\n", (string)$body);
+        // RFC 5321 dot-stuffing: escape body lines that start with "." so SMTP DATA does not terminate early.
         $body = preg_replace('/^\./m', '..', $body);
         return str_replace("\n", "\r\n", $body);
     }

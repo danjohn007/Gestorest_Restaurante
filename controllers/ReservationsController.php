@@ -476,7 +476,13 @@ class ReservationsController extends BaseController {
 
         if (!empty($contactSettings['operation_days']) || !empty($contactSettings['opening_time']) || !empty($contactSettings['closing_time'])) {
             $schedule = trim($contactSettings['operation_days'] ?? '');
-            $timeRange = trim(($contactSettings['opening_time'] ?? '') . ' - ' . ($contactSettings['closing_time'] ?? ''), ' -');
+            $openingTime = trim($contactSettings['opening_time'] ?? '');
+            $closingTime = trim($contactSettings['closing_time'] ?? '');
+            if ($openingTime !== '' && $closingTime !== '') {
+                $timeRange = $openingTime . ' - ' . $closingTime;
+            } else {
+                $timeRange = $openingTime !== '' ? $openingTime : $closingTime;
+            }
             $contactLines[] = trim($schedule . ($schedule !== '' && $timeRange !== '' ? ' | ' : '') . $timeRange);
         }
 
