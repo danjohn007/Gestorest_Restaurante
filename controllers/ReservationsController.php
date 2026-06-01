@@ -385,7 +385,11 @@ class ReservationsController extends BaseController {
     private function sendReservationConfirmationEmail($reservationId) {
         try {
             $reservationRows = $this->reservationModel->getReservationsWithTables(['id' => $reservationId]);
-            $reservation = $reservationRows[0] ?? $this->reservationModel->find($reservationId);
+            if (!empty($reservationRows)) {
+                $reservation = $reservationRows[0];
+            } else {
+                $reservation = $this->reservationModel->find($reservationId);
+            }
             if (!$reservation) {
                 return;
             }
