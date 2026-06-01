@@ -3,11 +3,12 @@
 define('APP_NAME', 'Sistema GestoRest');
 define('APP_VERSION', '1.0.0');
 
+
 // Database configuration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'exhacien_restaurante');
-define('DB_USER', 'exhacien_restaurante');
-define('DB_PASS', 'Danjohn007!');
+define('DB_NAME', 'ranchopa_restaurantee');
+define('DB_USER', 'ranchopa_restaurantee');
+define('DB_PASS', 'kDH}&7Q-FN@p');
 define('DB_CHARSET', 'utf8mb4');
 
 // Security
