@@ -127,6 +127,9 @@ class Reservation extends BaseModel {
                 if (isset($customerData['name']) && $customerData['name'] !== $customer['name']) {
                     $customerModel->update($customer['id'], ['name' => $customerData['name']]);
                 }
+                if (array_key_exists('email', $customerData) && $customerData['email'] !== $customer['email']) {
+                    $customerModel->update($customer['id'], ['email' => $customerData['email']]);
+                }
                 if (isset($customerData['birthday']) && $customerData['birthday'] !== $customer['birthday']) {
                     $customerModel->update($customer['id'], ['birthday' => $customerData['birthday']]);
                 }

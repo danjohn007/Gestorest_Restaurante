@@ -93,21 +93,25 @@ class SettingsController extends BaseController {
         }
 
         $emailSettings = $this->globalSettingModel->getByGroup('email');
-        $smtpHost = $emailSettings['smtp_host'] ?? '';
-        $smtpPort = (int)($emailSettings['smtp_port'] ?? 587);
-        $smtpUser = $emailSettings['smtp_user'] ?? '';
-        $smtpPass = $emailSettings['smtp_pass'] ?? '';
-        $fromEmail = $emailSettings['from_email'] ?? $smtpUser;
-        $fromName  = $emailSettings['from_name'] ?? 'GestoRest';
-        $security  = strtolower($emailSettings['smtp_security'] ?? 'tls');
 
-        if (empty($smtpHost) || empty($smtpUser)) {
+        if (empty($emailSettings['smtp_host']) || empty($emailSettings['smtp_user'])) {
             $this->json(['success' => false, 'message' => 'Configuración SMTP incompleta. Verifique smtp_host y smtp_user en Configurar Correo.']);
             return;
         }
 
         try {
-            $result = $this->sendSmtpTestEmail($smtpHost, $smtpPort, $smtpUser, $smtpPass, $fromEmail, $fromName, $toEmail, $security);
+            $mailer = new SmtpMailer($emailSettings);
+            $date = date('r');
+            $smtpPort = $emailSettings['smtp_port'] ?? 587;
+            $result = $mailer->sendPlainText(
+                $toEmail,
+                'Correo de Prueba - GestoRest',
+                "Este es un correo de prueba enviado desde el sistema GestoRest.\r\n\r\n" .
+                "Servidor SMTP: {$emailSettings['smtp_host']}:{$smtpPort}\r\n" .
+                "Fecha: {$date}\r\n\r\n" .
+                "Si recibiste este mensaje, la configuración SMTP es correcta."
+            );
+
             if ($result === true) {
                 $user = $this->getCurrentUser();
                 $this->actionLogModel->log($user['id'], 'test_email', 'settings', null, "Correo de prueba enviado a: $toEmail");
@@ -120,131 +124,4 @@ class SettingsController extends BaseController {
         }
     }
 
-    private function sendSmtpTestEmail($host, $port, $user, $pass, $fromEmail, $fromName, $toEmail, $security) {
-        $timeout = 15;
-
-        if ($security === 'ssl') {
-            $address = "ssl://{$host}:{$port}";
-        } else {
-            $address = "tcp://{$host}:{$port}";
-        }
-
-        $socket = stream_socket_client($address, $errno, $errstr, $timeout);
-        if (!$socket) {
-            error_log("SMTP connection failed to {$host}:{$port} - [{$errno}] {$errstr}");
-            return "No se pudo conectar al servidor SMTP ({$host}:{$port}): $errstr";
-        }
-
-        // Set timeout for subsequent read/write operations on the stream
-        stream_set_timeout($socket, $timeout);
-
-        $read = $this->smtpRead($socket);
-        if (substr($read, 0, 3) !== '220') {
-            fclose($socket);
-            return "El servidor SMTP no respondió correctamente: $read";
-        }
-
-        $ehloHost = gethostname() ?: 'localhost';
-        $this->smtpWrite($socket, "EHLO " . $ehloHost);
-        $read = $this->smtpRead($socket);
-
-        if ($security === 'tls') {
-            $this->smtpWrite($socket, "STARTTLS");
-            $read = $this->smtpRead($socket);
-            if (substr($read, 0, 3) !== '220') {
-                fclose($socket);
-                return "STARTTLS rechazado por el servidor: $read";
-            }
-            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT);
-            $this->smtpWrite($socket, "EHLO " . $ehloHost);
-            $this->smtpRead($socket);
-        }
-
-        if (!empty($user) && !empty($pass)) {
-            $this->smtpWrite($socket, "AUTH LOGIN");
-            $read = $this->smtpRead($socket);
-            if (substr($read, 0, 3) !== '334') {
-                fclose($socket);
-                return "Error de autenticación SMTP (AUTH LOGIN): $read";
-            }
-            $this->smtpWrite($socket, base64_encode($user));
-            $read = $this->smtpRead($socket);
-            if (substr($read, 0, 3) !== '334') {
-                fclose($socket);
-                return "Error de autenticación SMTP (usuario): $read";
-            }
-            $this->smtpWrite($socket, base64_encode($pass));
-            $read = $this->smtpRead($socket);
-            if (substr($read, 0, 3) !== '235') {
-                fclose($socket);
-                return "Credenciales SMTP inválidas: $read";
-            }
-        }
-
-        $this->smtpWrite($socket, "MAIL FROM:<{$fromEmail}>");
-        $read = $this->smtpRead($socket);
-        if (substr($read, 0, 3) !== '250') {
-            fclose($socket);
-            return "Error en MAIL FROM: $read";
-        }
-
-        $this->smtpWrite($socket, "RCPT TO:<{$toEmail}>");
-        $read = $this->smtpRead($socket);
-        if (substr($read, 0, 3) !== '250') {
-            fclose($socket);
-            return "Error en RCPT TO: $read";
-        }
-
-        $this->smtpWrite($socket, "DATA");
-        $read = $this->smtpRead($socket);
-        if (substr($read, 0, 3) !== '354') {
-            fclose($socket);
-            return "Error al iniciar datos: $read";
-        }
-
-        $date    = date('r');
-        $subject = '=?UTF-8?B?' . base64_encode('Correo de Prueba - GestoRest') . '?=';
-        $body    = "Este es un correo de prueba enviado desde el sistema GestoRest.\r\n\r\n" .
-                   "Servidor SMTP: {$host}:{$port}\r\n" .
-                   "Fecha: {$date}\r\n\r\n" .
-                   "Si recibiste este mensaje, la configuración SMTP es correcta.";
-
-        $message = "Date: {$date}\r\n" .
-                   "From: {$fromName} <{$fromEmail}>\r\n" .
-                   "To: <{$toEmail}>\r\n" .
-                   "Subject: {$subject}\r\n" .
-                   "MIME-Version: 1.0\r\n" .
-                   "Content-Type: text/plain; charset=UTF-8\r\n" .
-                   "Content-Transfer-Encoding: 8bit\r\n" .
-                   "\r\n" .
-                   $body . "\r\n.\r\n";
-
-        fwrite($socket, $message);
-        $read = $this->smtpRead($socket);
-        if (substr($read, 0, 3) !== '250') {
-            fclose($socket);
-            return "Error al enviar el mensaje: $read";
-        }
-
-        $this->smtpWrite($socket, "QUIT");
-        fclose($socket);
-
-        return true;
-    }
-
-    private function smtpRead($socket) {
-        $response = '';
-        // RFC 5321: max line length is 512 bytes + CRLF; read 515 bytes per line to handle multi-line responses
-        while ($line = fgets($socket, 515)) {
-            $response .= $line;
-            if (substr($line, 3, 1) === ' ') {
-                break;
-            }
-        }
-        return trim($response);
-    }
-
-    private function smtpWrite($socket, $command) {
-        fwrite($socket, $command . "\r\n");
-    }
 }

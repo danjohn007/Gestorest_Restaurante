@@ -129,6 +129,7 @@
             
             <!-- Test de Correo -->
             <div class="tab-pane fade" id="test_email">
+                <?php $reservationCancellationText = $settings['email']['reservation_cancellation_text'] ?? GlobalSetting::getDefaultReservationCancellationText(); ?>
                 <div class="card mb-3">
                     <div class="card-header">
                         <h5 class="mb-0"><i class="bi bi-send-check text-success"></i> Prueba de Envío de Correo</h5>
@@ -232,6 +233,22 @@
                                     </li>
                                 </ul>
                             </div>
+                        </div>
+                    </div>
+                    <div class="card mt-3">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-pencil-square text-primary"></i> Texto Cancelación</h6>
+                            <p class="text-muted small mb-3">
+                                Este texto se mostrará debajo de la información de contacto en los correos de confirmación de reservaciones.
+                            </p>
+                            <form method="POST" action="<?= BASE_URL ?>/settings/save">
+                                <input type="hidden" name="group" value="email">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Texto Cancelación</label>
+                                    <textarea class="form-control" name="fields[reservation_cancellation_text]" rows="3"><?= htmlspecialchars($reservationCancellationText) ?></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar</button>
+                            </form>
                         </div>
                     </div>
                 </div>
