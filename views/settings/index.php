@@ -13,6 +13,9 @@
             <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#email">
                 <i class="bi bi-envelope"></i> Configurar Correo
             </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#test_email">
+                <i class="bi bi-send-check"></i> Test de Correo
+            </a>
             <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#contacto">
                 <i class="bi bi-telephone"></i> Contacto y Horarios
             </a>
@@ -124,6 +127,116 @@
                 </div>
             </div>
             
+            <!-- Test de Correo -->
+            <div class="tab-pane fade" id="test_email">
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-send-check text-success"></i> Prueba de Envío de Correo</h5>
+                        <small class="text-muted">Valida la configuración SMTP del sistema enviando un correo de prueba</small>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <!-- Enviar correo de prueba -->
+                    <div class="col-md-7">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-envelope-check text-success"></i> Enviar Correo de Prueba</h6>
+                                <p class="text-muted small">
+                                    La configuración SMTP se lee directamente desde la base de datos (<code>global_config</code>).
+                                    Asegúrate de que los campos <strong>smtp_host</strong>, <strong>smtp_user</strong>,
+                                    <strong>smtp_password</strong> y <strong>smtp_port</strong> estén configurados en
+                                    <a href="#email" data-bs-toggle="list">Configuración del Sistema</a>.
+                                </p>
+                                <div id="testEmailAlert"></div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Email de Destino <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="testEmailTo" placeholder="ejemplo@correo.com">
+                                </div>
+                                <button type="button" class="btn btn-primary w-100" id="btnSendTestEmail">
+                                    <i class="bi bi-send"></i> Enviar Correo de Prueba
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Configuración SMTP activa -->
+                    <div class="col-md-5">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="bi bi-list-check text-primary"></i> Configuración SMTP Activa</h6>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>
+                                            <?php if (!empty($settings['email']['smtp_host'])): ?>
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            <?php else: ?>
+                                                <i class="bi bi-x-circle-fill text-danger"></i>
+                                            <?php endif; ?>
+                                            Servidor (Host):
+                                        </span>
+                                        <code><?= htmlspecialchars($settings['email']['smtp_host'] ?? '—') ?></code>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>
+                                            <?php if (!empty($settings['email']['smtp_user'])): ?>
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            <?php else: ?>
+                                                <i class="bi bi-x-circle-fill text-danger"></i>
+                                            <?php endif; ?>
+                                            Usuario SMTP:
+                                        </span>
+                                        <code><?= htmlspecialchars($settings['email']['smtp_user'] ?? '—') ?></code>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>
+                                            <?php if (!empty($settings['email']['smtp_port'])): ?>
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            <?php else: ?>
+                                                <i class="bi bi-info-circle-fill text-info"></i>
+                                            <?php endif; ?>
+                                            Puerto SMTP:
+                                        </span>
+                                        <span>
+                                            <code><?= htmlspecialchars($settings['email']['smtp_port'] ?? '587') ?></code>
+                                            <?php
+                                                $port = (int)($settings['email']['smtp_port'] ?? 587);
+                                                $sec  = strtolower($settings['email']['smtp_security'] ?? 'tls');
+                                                if ($port === 465 || $sec === 'ssl') echo '<span class="badge bg-secondary ms-1">SSL/SMTPS</span>';
+                                                elseif ($port === 587 || $sec === 'tls') echo '<span class="badge bg-info ms-1">STARTTLS</span>';
+                                            ?>
+                                        </span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>
+                                            <i class="bi bi-shield-lock-fill text-secondary"></i>
+                                            Contraseña:
+                                        </span>
+                                        <code><?= !empty($settings['email']['smtp_pass']) ? str_repeat('•', 8) : '—' ?></code>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>
+                                            <?php if (!empty($settings['email']['from_email'])): ?>
+                                                <i class="bi bi-check-circle-fill text-success"></i>
+                                            <?php else: ?>
+                                                <i class="bi bi-info-circle-fill text-info"></i>
+                                            <?php endif; ?>
+                                            Correo Remitente:
+                                        </span>
+                                        <code><?= htmlspecialchars($settings['email']['from_email'] ?? '—') ?></code>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                        <span>
+                                            <i class="bi bi-info-circle-fill text-info"></i>
+                                            Seguridad:
+                                        </span>
+                                        <code><?= htmlspecialchars(strtoupper($settings['email']['smtp_security'] ?? 'TLS')) ?></code>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Contacto -->
             <div class="tab-pane fade" id="contacto">
                 <div class="card">
@@ -466,6 +579,53 @@
                         var boxes = document.querySelectorAll('.btn-pedidos-check[data-role="' + escapedRole + '"]');
                         var allChecked = Array.prototype.every.call(boxes, function (cb) { return cb.checked; });
                         Array.prototype.forEach.call(boxes, function (cb) { cb.checked = !allChecked; });
+                    });
+                });
+            }());
+            </script>
+
+            <script>
+            (function () {
+                var btn = document.getElementById('btnSendTestEmail');
+                if (!btn) return;
+                btn.addEventListener('click', function () {
+                    var emailInput = document.getElementById('testEmailTo');
+                    var alertBox  = document.getElementById('testEmailAlert');
+                    var email = emailInput ? emailInput.value.trim() : '';
+                    alertBox.innerHTML = '';
+
+                    if (!email) {
+                        alertBox.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Ingresa un email de destino.</div>';
+                        return;
+                    }
+
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Enviando...';
+
+                    var formData = new FormData();
+                    formData.append('to_email', email);
+
+                    fetch('<?= BASE_URL ?>/settings/testEmail', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            alertBox.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> ' + data.message + '</div>';
+                        } else {
+                            alertBox.innerHTML = '<div class="alert alert-danger"><i class="bi bi-x-circle"></i> ' + data.message + '</div>';
+                        }
+                    })
+                    .catch(function (err) {
+                        var msg = document.createElement('span');
+                        msg.textContent = String(err);
+                        alertBox.innerHTML = '<div class="alert alert-danger"><i class="bi bi-x-circle"></i> Error de conexión: </div>';
+                        alertBox.querySelector('.alert').appendChild(msg);
+                    })
+                    .finally(function () {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-send"></i> Enviar Correo de Prueba';
                     });
                 });
             }());
