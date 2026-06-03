@@ -230,7 +230,8 @@ class PublicController extends BaseController {
                 $customerData = [
                     'name' => $_POST['customer_name'],
                     'phone' => $_POST['customer_phone'],
-                    'birthday' => !empty($_POST['customer_birthday']) ? $_POST['customer_birthday'] : null
+                    'birthday' => !empty($_POST['customer_birthday']) ? $_POST['customer_birthday'] : null,
+                    'email' => !empty($_POST['customer_email']) ? trim($_POST['customer_email']) : null
                 ];
                 
                 // Check table availability if tables are specified
@@ -241,6 +242,9 @@ class PublicController extends BaseController {
                 }
                 
                 $reservationId = $this->reservationModel->createReservationWithCustomer($reservationData, $customerData);
+                
+                // Send confirmation email if customer provided email
+                $this->sendReservationConfirmationEmail($reservationId);
                 
                 $this->viewPublic('public/reservation_success', [
                     'reservation_id' => $reservationId
@@ -352,6 +356,82 @@ class PublicController extends BaseController {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Error fetching available tables: ' . $e->getMessage()]);
+        }
+    }
+    
+    private function sendReservationConfirmationEmail($reservationId) {
+        try {
+            $reservationRows = $this->reservationModel->getReservationsWithTables(['id' => $reservationId]);
+            if (!empty($reservationRows)) {
+                $reservation = $reservationRows[0];
+            } else {
+                $reservation = $this->reservationModel->find($reservationId);
+            }
+            if (!$reservation) {
+                return;
+            }
+
+            $customer = $this->customerModel->findBy('phone', $reservation['customer_phone']);
+            $customerEmail = trim($customer['email'] ?? '');
+            if (empty($customerEmail) || !filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+                return;
+            }
+
+            $globalSettingModel = new GlobalSetting();
+            $emailSettings = $globalSettingModel->getByGroup('email');
+            if (empty($emailSettings['smtp_host']) || empty($emailSettings['smtp_user'])) {
+                return;
+            }
+
+            $generalSettings = $globalSettingModel->getByGroup('general');
+            $contactSettings = $globalSettingModel->getByGroup('contacto');
+            $siteName = trim($generalSettings['site_name'] ?? APP_NAME);
+            
+            // Prepare email data
+            $tables = trim($reservation['table_numbers'] ?? '');
+            if (empty($tables)) {
+                $tables = 'Por asignar';
+            } else {
+                $tables = 'Mesa(s) ' . $tables;
+            }
+            
+            $emailData = [
+                'site_name' => $siteName,
+                'customer_name' => $reservation['customer_name'],
+                'customer_email' => $customerEmail,
+                'customer_phone' => $reservation['customer_phone'],
+                'tables' => $tables,
+                'datetime' => $reservation['reservation_datetime'],
+                'party_size' => $reservation['party_size'],
+                'status' => $reservation['status'],
+                'notes' => $reservation['notes'] ?? '—',
+                'contact_email' => trim($contactSettings['email'] ?? $emailSettings['from_email'] ?? ''),
+                'contact_website' => trim($contactSettings['website'] ?? '')
+            ];
+            
+            // Build HTML email using template
+            $htmlBody = ReservationEmailTemplate::buildConfirmationEmail($emailData);
+            
+            // Prepare CC list (send copy to sender/restaurant email)
+            $ccEmails = [];
+            $senderEmail = trim($emailSettings['from_email'] ?? '');
+            if (!empty($senderEmail) && filter_var($senderEmail, FILTER_VALIDATE_EMAIL)) {
+                $ccEmails[] = $senderEmail;
+            }
+            
+            $mailer = new SmtpMailer($emailSettings);
+            $result = $mailer->sendHtml(
+                $customerEmail,
+                'Confirmación de Reservación - ' . $siteName,
+                $htmlBody,
+                $ccEmails
+            );
+
+            if ($result !== true) {
+                error_log('No se pudo enviar el correo de confirmación de reservación #' . $reservationId . ': ' . $result);
+            }
+        } catch (Exception $e) {
+            error_log('Error al enviar confirmación de reservación #' . $reservationId . ': ' . $e->getMessage());
         }
     }
 }
