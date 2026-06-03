@@ -16,12 +16,12 @@ class ReservationEmailTemplate {
         $contactEmail = htmlspecialchars($data['contact_email'] ?? '');
         $contactWebsite = htmlspecialchars($data['contact_website'] ?? '');
         
-        // Map status to Spanish
+        // Map status to Spanish (feminine form to match 'reservación')
         $statusMap = [
             'pendiente' => 'PENDIENTE',
-            'confirmada' => 'CONFIRMADO',
-            'cancelada' => 'CANCELADO',
-            'completada' => 'COMPLETADO'
+            'confirmada' => 'CONFIRMADA',
+            'cancelada' => 'CANCELADA',
+            'completada' => 'COMPLETADA'
         ];
         $statusDisplay = strtoupper($statusMap[$status] ?? $status);
         
@@ -114,13 +114,21 @@ class ReservationEmailTemplate {
             font-weight: bold;
             font-size: 14px;
         }
-        .status-confirmado {
+        .status-confirmada {
             background-color: #28a745;
             color: #ffffff;
         }
         .status-pendiente {
             background-color: #ffc107;
             color: #000000;
+        }
+        .status-cancelada {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+        .status-completada {
+            background-color: #17a2b8;
+            color: #ffffff;
         }
         .contact-section {
             background-color: #e9f5ff;

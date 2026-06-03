@@ -184,12 +184,12 @@ class SmtpMailer {
         $headers .= "Subject: {$encodedSubject}\r\n" .
                    "MIME-Version: 1.0\r\n";
         
+        $encodedBody = chunk_split(base64_encode($this->normalizeBody($body)));
+        
         if ($isHtml) {
-            $encodedBody = chunk_split(base64_encode($this->normalizeBody($body)));
             $headers .= "Content-Type: text/html; charset=UTF-8\r\n" .
                        "Content-Transfer-Encoding: base64\r\n";
         } else {
-            $encodedBody = chunk_split(base64_encode($this->normalizeBody($body)));
             $headers .= "Content-Type: text/plain; charset=UTF-8\r\n" .
                        "Content-Transfer-Encoding: base64\r\n";
         }
