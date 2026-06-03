@@ -186,7 +186,8 @@ class ReservationsController extends BaseController {
                 $customerData = [
                     'name' => $_POST['customer_name'],
                     'phone' => $_POST['customer_phone'],
-                    'birthday' => !empty($_POST['customer_birthday']) ? $_POST['customer_birthday'] : null
+                    'birthday' => !empty($_POST['customer_birthday']) ? $_POST['customer_birthday'] : null,
+                    'email' => !empty($_POST['customer_email']) ? trim($_POST['customer_email']) : null
                 ];
                 
                 // Check table availability if tables are specified
@@ -197,6 +198,10 @@ class ReservationsController extends BaseController {
                 }
                 
                 $reservationId = $this->reservationModel->createReservationWithCustomer($reservationData, $customerData);
+                
+                // Send confirmation email if customer provided email
+                $this->sendReservationConfirmationEmail($reservationId);
+                
                 $this->redirect('reservations/show/' . $reservationId, 'success', 'Reservación creada correctamente');
                 
             } catch (Exception $e) {
@@ -309,6 +314,15 @@ class ReservationsController extends BaseController {
             'party_size' => ['required' => true, 'min' => 1, 'max' => 20]
         ]);
         
+        // Validate email if provided (optional but must be valid)
+        if (!empty($data['customer_email'])) {
+            if (!filter_var($data['customer_email'], FILTER_VALIDATE_EMAIL)) {
+                $errors['customer_email'] = 'El correo electrónico no es válido';
+            } elseif (strlen($data['customer_email']) > 255) {
+                $errors['customer_email'] = 'El correo electrónico es demasiado largo';
+            }
+        }
+        
         // Validate reservation datetime
         if (isset($data['reservation_datetime']) && !empty($data['reservation_datetime'])) {
             $reservationTime = strtotime($data['reservation_datetime']);
@@ -382,7 +396,7 @@ class ReservationsController extends BaseController {
         }
     }
 
-    private function sendReservationConfirmationEmail($reservationId) {
+    protected function sendReservationConfirmationEmail($reservationId) {
         try {
             $reservationRows = $this->reservationModel->getReservationsWithTables(['id' => $reservationId]);
             if (!empty($reservationRows)) {
@@ -409,50 +423,45 @@ class ReservationsController extends BaseController {
             $generalSettings = $globalSettingModel->getByGroup('general');
             $contactSettings = $globalSettingModel->getByGroup('contacto');
             $siteName = trim($generalSettings['site_name'] ?? APP_NAME);
-            $cancellationText = trim($emailSettings['reservation_cancellation_text'] ?? GlobalSetting::getDefaultReservationCancellationText());
-            $contactLines = $this->buildContactLines($contactSettings);
-
+            
+            // Prepare email data
             $tables = trim($reservation['table_numbers'] ?? '');
-            $bodyLines = [
-                "Hola {$reservation['customer_name']},",
-                '',
-                "Su reservación en {$siteName} ha sido confirmada.",
-                '',
-                'Detalles de la reservación:',
-                'Número de reservación: #' . str_pad($reservationId, 6, '0', STR_PAD_LEFT),
-                'Fecha y hora: ' . date('d/m/Y H:i', strtotime($reservation['reservation_datetime'])),
-                'Personas: ' . $reservation['party_size']
+            if (empty($tables)) {
+                $tables = 'Por asignar';
+            } else {
+                $tables = 'Mesa(s) ' . $tables;
+            }
+            
+            $emailData = [
+                'site_name' => $siteName,
+                'customer_name' => $reservation['customer_name'],
+                'customer_email' => $customerEmail,
+                'customer_phone' => $reservation['customer_phone'],
+                'tables' => $tables,
+                'datetime' => $reservation['reservation_datetime'],
+                'party_size' => $reservation['party_size'],
+                'status' => $reservation['status'],
+                'notes' => $reservation['notes'] ?? '—',
+                'contact_email' => trim($contactSettings['email'] ?? $emailSettings['from_email'] ?? ''),
+                'contact_website' => trim($contactSettings['website'] ?? '')
             ];
-
-            if ($tables !== '') {
-                $bodyLines[] = 'Mesas: ' . $tables;
+            
+            // Build HTML email using template
+            $htmlBody = ReservationEmailTemplate::buildConfirmationEmail($emailData);
+            
+            // Prepare CC list (send copy to sender/restaurant email)
+            $ccEmails = [];
+            $senderEmail = trim($emailSettings['from_email'] ?? '');
+            if (!empty($senderEmail) && filter_var($senderEmail, FILTER_VALIDATE_EMAIL)) {
+                $ccEmails[] = $senderEmail;
             }
-
-            if (!empty($reservation['notes'])) {
-                $bodyLines[] = 'Notas: ' . trim($reservation['notes']);
-            }
-
-            if (!empty($contactLines)) {
-                $bodyLines[] = '';
-                $bodyLines[] = 'Información de contacto:';
-                foreach ($contactLines as $contactLine) {
-                    $bodyLines[] = $contactLine;
-                }
-            }
-
-            if ($cancellationText !== '') {
-                $bodyLines[] = '';
-                $bodyLines[] = $cancellationText;
-            }
-
-            $bodyLines[] = '';
-            $bodyLines[] = 'Gracias por elegirnos.';
-
+            
             $mailer = new SmtpMailer($emailSettings);
-            $result = $mailer->sendPlainText(
+            $result = $mailer->sendHtml(
                 $customerEmail,
                 'Confirmación de Reservación - ' . $siteName,
-                implode("\r\n", $bodyLines)
+                $htmlBody,
+                $ccEmails
             );
 
             if ($result !== true) {

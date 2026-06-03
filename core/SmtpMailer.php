@@ -21,6 +21,14 @@ class SmtpMailer {
     }
 
     public function sendPlainText($toEmail, $subject, $body) {
+        return $this->send($toEmail, $subject, $body, false);
+    }
+
+    public function sendHtml($toEmail, $subject, $htmlBody, $ccEmails = []) {
+        return $this->send($toEmail, $subject, $htmlBody, true, $ccEmails);
+    }
+
+    private function send($toEmail, $subject, $body, $isHtml = false, $ccEmails = []) {
         if (empty($this->host) || empty($this->user) || empty($this->fromEmail)) {
             return 'Configuración SMTP incompleta. Verifique smtp_host, smtp_user y from_email.';
         }
@@ -117,6 +125,18 @@ class SmtpMailer {
             return "Error en RCPT TO: $read";
         }
 
+        // Add CC recipients
+        foreach ($ccEmails as $ccEmail) {
+            if (!empty($ccEmail) && filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
+                $this->smtpWrite($socket, "RCPT TO:<{$ccEmail}>");
+                $read = $this->smtpRead($socket);
+                if (substr($read, 0, 3) !== '250') {
+                    // Log error but continue with other recipients
+                    error_log("Error adding CC recipient {$ccEmail}: $read");
+                }
+            }
+        }
+
         $this->smtpWrite($socket, 'DATA');
         $read = $this->smtpRead($socket);
         if (substr($read, 0, 3) !== '354') {
@@ -125,7 +145,7 @@ class SmtpMailer {
         }
 
         $date = date('r');
-        $message = $this->buildMessage($toEmail, $subject, $body, $date);
+        $message = $this->buildMessage($toEmail, $subject, $body, $date, $isHtml, $ccEmails);
 
         fwrite($socket, $message);
         $read = $this->smtpRead($socket);
@@ -140,20 +160,41 @@ class SmtpMailer {
         return true;
     }
 
-    private function buildMessage($toEmail, $subject, $body, $date) {
+    private function buildMessage($toEmail, $subject, $body, $date, $isHtml = false, $ccEmails = []) {
         $encodedSubject = $this->encodeHeader($subject);
         $encodedFromName = $this->encodeHeader($this->fromName);
-        $encodedBody = chunk_split(base64_encode($this->normalizeBody($body)));
-
-        return "Date: {$date}\r\n" .
-               "From: {$encodedFromName} <{$this->fromEmail}>\r\n" .
-               "To: <{$toEmail}>\r\n" .
-               "Subject: {$encodedSubject}\r\n" .
-               "MIME-Version: 1.0\r\n" .
-               "Content-Type: text/plain; charset=UTF-8\r\n" .
-               "Content-Transfer-Encoding: base64\r\n" .
-               "\r\n" .
-               $encodedBody . "\r\n.\r\n";
+        
+        $headers = "Date: {$date}\r\n" .
+                   "From: {$encodedFromName} <{$this->fromEmail}>\r\n" .
+                   "To: <{$toEmail}>\r\n";
+        
+        // Add CC headers
+        if (!empty($ccEmails)) {
+            $ccList = [];
+            foreach ($ccEmails as $ccEmail) {
+                if (!empty($ccEmail) && filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
+                    $ccList[] = "<{$ccEmail}>";
+                }
+            }
+            if (!empty($ccList)) {
+                $headers .= "Cc: " . implode(', ', $ccList) . "\r\n";
+            }
+        }
+        
+        $headers .= "Subject: {$encodedSubject}\r\n" .
+                   "MIME-Version: 1.0\r\n";
+        
+        if ($isHtml) {
+            $encodedBody = chunk_split(base64_encode($this->normalizeBody($body)));
+            $headers .= "Content-Type: text/html; charset=UTF-8\r\n" .
+                       "Content-Transfer-Encoding: base64\r\n";
+        } else {
+            $encodedBody = chunk_split(base64_encode($this->normalizeBody($body)));
+            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n" .
+                       "Content-Transfer-Encoding: base64\r\n";
+        }
+        
+        return $headers . "\r\n" . $encodedBody . "\r\n.\r\n";
     }
 
     private function normalizeBody($body) {

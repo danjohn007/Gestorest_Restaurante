@@ -62,6 +62,25 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
+                                <label for="customer_email" class="form-label">Correo Electrónico (Opcional)</label>
+                                <input type="email" 
+                                       class="form-control <?= isset($errors['customer_email']) ? 'is-invalid' : '' ?>" 
+                                       id="customer_email" 
+                                       name="customer_email" 
+                                       value="<?= htmlspecialchars($old['customer_email'] ?? '') ?>"
+                                       placeholder="ejemplo@correo.com">
+                                <?php if (isset($errors['customer_email'])): ?>
+                                    <div class="invalid-feedback">
+                                        <?= htmlspecialchars($errors['customer_email']) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="form-text">
+                                    Recibirá confirmación de su reservación por correo electrónico
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
                                 <label for="customer_birthday" class="form-label">Cumpleaños (Opcional)</label>
                                 <input type="text" 
                                        class="form-control <?= isset($errors['customer_birthday']) ? 'is-invalid' : '' ?>" 
@@ -79,6 +98,9 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="party_size" class="form-label">Número de Personas *</label>
