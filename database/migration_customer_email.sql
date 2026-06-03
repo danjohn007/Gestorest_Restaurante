@@ -4,10 +4,10 @@
 
 -- Add email column to customers table
 ALTER TABLE customers 
-ADD COLUMN email VARCHAR(255) NULL AFTER phone;
+ADD COLUMN email-reservation VARCHAR(255) NULL AFTER phone;
 
 -- Add index for email lookups
-CREATE INDEX idx_customers_email ON customers(email);
+CREATE INDEX idx_customers_email-reservation ON customers(email);
 
 -- Update existing records to have NULL email (default)
 -- No data update needed as column allows NULL
