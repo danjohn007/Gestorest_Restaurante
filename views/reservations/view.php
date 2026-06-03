@@ -123,6 +123,18 @@
                     </div>
                 </div>
                 
+                <?php if (!empty($reservation['customer_email'])): ?>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Email:</label>
+                    <div>
+                        <a href="mailto:<?= htmlspecialchars($reservation['customer_email']) ?>" class="text-decoration-none">
+                            <i class="bi bi-envelope"></i>
+                            <?= htmlspecialchars($reservation['customer_email']) ?>
+                        </a>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
                 <?php if ($reservation['customer_birthday']): ?>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Cumpleaños:</label>
