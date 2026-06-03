@@ -189,6 +189,17 @@ class Customer extends BaseModel {
         return parent::update($id, $data);
     }
     
+    public function getAllActive() {
+        $query = "SELECT id, name, phone, email FROM customers 
+                  WHERE active = 1 
+                  ORDER BY name ASC";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+    
     public function getAllWithPagination($limit = 20, $offset = 0) {
         $query = "SELECT * FROM customers 
                   WHERE active = 1 

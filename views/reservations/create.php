@@ -27,15 +27,39 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="customer_name" class="form-label">Nombre del Cliente *</label>
-                                <input type="text" 
-                                       class="form-control <?= isset($errors['customer_name']) ? 'is-invalid' : '' ?>" 
-                                       id="customer_name" 
-                                       name="customer_name" 
-                                       value="<?= htmlspecialchars($old['customer_name'] ?? '') ?>" 
-                                       required>
+                                <label for="customer_select" class="form-label">Nombre del Cliente *</label>
+                                <select class="form-select <?= isset($errors['customer_name']) ? 'is-invalid' : '' ?>"
+                                        id="customer_select">
+                                    <option value="">Seleccionar cliente...</option>
+                                    <?php foreach ($customers as $c): ?>
+                                    <option value="<?= $c['id'] ?>"
+                                            data-name="<?= htmlspecialchars($c['name']) ?>"
+                                            data-phone="<?= htmlspecialchars($c['phone']) ?>"
+                                            data-email="<?= htmlspecialchars($c['email'] ?? '') ?>"
+                                            <?php
+                                            $oldId = $old['customer_id'] ?? '';
+                                            if ($oldId == $c['id']) echo 'selected';
+                                            ?>>
+                                        <?= htmlspecialchars($c['name']) ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                    <option value="otro" <?= (isset($old['customer_id']) && $old['customer_id'] === 'otro') || (!empty($old['customer_name']) && empty($old['customer_id'])) ? 'selected' : '' ?>>
+                                        --- Otro ---
+                                    </option>
+                                </select>
+                                <!-- Manual name input shown only for "otro" -->
+                                <input type="text"
+                                       class="form-control mt-2 d-none"
+                                       id="customer_name_manual"
+                                       placeholder="Nombre completo del cliente"
+                                       value="<?= (!empty($old['customer_name']) && empty($old['customer_id'])) ? htmlspecialchars($old['customer_name']) : '' ?>">
+                                <!-- Hidden fields submitted with the form -->
+                                <input type="hidden" name="customer_name" id="customer_name"
+                                       value="<?= htmlspecialchars($old['customer_name'] ?? '') ?>">
+                                <input type="hidden" name="customer_id" id="customer_id"
+                                       value="<?= htmlspecialchars($old['customer_id'] ?? '') ?>">
                                 <?php if (isset($errors['customer_name'])): ?>
-                                    <div class="invalid-feedback">
+                                    <div class="invalid-feedback d-block">
                                         <?= htmlspecialchars($errors['customer_name']) ?>
                                     </div>
                                 <?php endif; ?>
@@ -248,6 +272,74 @@ document.addEventListener('DOMContentLoaded', function() {
     const reservationDatetime = document.getElementById('reservation_datetime');
     const partySizeSelect = document.getElementById('party_size');
     const tableCheckboxes = document.querySelectorAll('.table-checkbox');
+    
+    // --- Customer select logic ---
+    const customerSelect = document.getElementById('customer_select');
+    const customerNameManual = document.getElementById('customer_name_manual');
+    const customerNameHidden = document.getElementById('customer_name');
+    const customerIdHidden = document.getElementById('customer_id');
+    const phoneInput = document.getElementById('customer_phone');
+    const emailInput = document.getElementById('customer_email');
+    
+    function applyCustomerSelection(select) {
+        const value = select.value;
+        if (value === '') {
+            // No selection
+            customerNameManual.classList.add('d-none');
+            customerNameManual.required = false;
+            customerNameHidden.value = '';
+            customerIdHidden.value = '';
+            phoneInput.readOnly = false;
+            emailInput.readOnly = false;
+        } else if (value === 'otro') {
+            // Manual entry
+            customerNameManual.classList.remove('d-none');
+            customerNameManual.required = true;
+            customerNameHidden.value = customerNameManual.value;
+            customerIdHidden.value = 'otro';
+            phoneInput.readOnly = false;
+            emailInput.readOnly = false;
+        } else {
+            // Existing customer selected
+            const opt = select.options[select.selectedIndex];
+            customerNameManual.classList.add('d-none');
+            customerNameManual.required = false;
+            customerNameHidden.value = opt.dataset.name;
+            customerIdHidden.value = value;
+            phoneInput.readOnly = true;
+            phoneInput.value = opt.dataset.phone;
+            if (opt.dataset.email) {
+                emailInput.readOnly = true;
+                emailInput.value = opt.dataset.email;
+            } else {
+                emailInput.readOnly = false;
+                emailInput.value = '';
+            }
+        }
+    }
+    
+    customerSelect.addEventListener('change', function() {
+        applyCustomerSelection(this);
+    });
+    
+    customerNameManual.addEventListener('input', function() {
+        customerNameHidden.value = this.value;
+    });
+    
+    // Restore state on page load (e.g., after form validation error)
+    (function() {
+        const oldCustomerId = <?= json_encode($old['customer_id'] ?? '', JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+        if (oldCustomerId !== '') {
+            // Try to find the option
+            for (let i = 0; i < customerSelect.options.length; i++) {
+                if (customerSelect.options[i].value === String(oldCustomerId)) {
+                    customerSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            applyCustomerSelection(customerSelect);
+        }
+    })();
     
     // Set minimum datetime to now + 30 minutes
     const now = new Date();

@@ -115,6 +115,7 @@ class Reservation extends BaseModel {
             $reservationData['customer_name'] = $customerData['name'];
             $reservationData['customer_phone'] = $customerData['phone'];
             $reservationData['customer_birthday'] = $customerData['birthday'] ?? null;
+            $reservationData['customer_email'] = !empty($customerData['email']) ? $customerData['email'] : null;
             
             // Also create/update customer record for tracking purposes
             $customerModel = new Customer();

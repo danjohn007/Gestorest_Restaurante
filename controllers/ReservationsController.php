@@ -46,9 +46,13 @@ class ReservationsController extends BaseController {
             $waiterModel = new Waiter();
             $waiters = $waiterModel->getWaitersWithUsers();
             
+            // Get registered customers for the dropdown
+            $customers = $this->customerModel->getAllActive();
+            
             $this->view('reservations/create', [
                 'tables' => $tables,
-                'waiters' => $waiters
+                'waiters' => $waiters,
+                'customers' => $customers
             ]);
         }
     }
@@ -209,12 +213,14 @@ class ReservationsController extends BaseController {
                 $tables = $this->tableModel->findAll(['active' => 1, 'status' => TABLE_AVAILABLE], 'number ASC');
                 $waiterModel = new Waiter();
                 $waiters = $waiterModel->getWaitersWithUsers();
+                $customers = $this->customerModel->getAllActive();
                 
                 $this->view('reservations/create', [
                     'error' => 'Error al crear la reservación: ' . $e->getMessage(),
                     'old' => $_POST,
                     'tables' => $tables,
-                    'waiters' => $waiters
+                    'waiters' => $waiters,
+                    'customers' => $customers
                 ]);
             }
         } else {
@@ -222,12 +228,14 @@ class ReservationsController extends BaseController {
             $tables = $this->tableModel->findAll(['active' => 1, 'status' => TABLE_AVAILABLE], 'number ASC');
             $waiterModel = new Waiter();
             $waiters = $waiterModel->getWaitersWithUsers();
+            $customers = $this->customerModel->getAllActive();
             
             $this->view('reservations/create', [
                 'errors' => $errors,
                 'old' => $_POST,
                 'tables' => $tables,
-                'waiters' => $waiters
+                'waiters' => $waiters,
+                'customers' => $customers
             ]);
         }
     }
@@ -409,7 +417,11 @@ class ReservationsController extends BaseController {
             }
 
             $customer = $this->customerModel->findBy('phone', $reservation['customer_phone']);
-            $customerEmail = trim($customer['email'] ?? '');
+            // Prefer the email stored directly in the reservation, fall back to customer record
+            $customerEmail = trim($reservation['customer_email'] ?? '');
+            if (empty($customerEmail) && $customer) {
+                $customerEmail = trim($customer['email'] ?? '');
+            }
             if (empty($customerEmail) || !filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
                 return;
             }
